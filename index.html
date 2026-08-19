@@ -1,0 +1,2176 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HospitalityOS · Zielkunden- und Termin-Assistent · Prototyp</title>
+<meta name="description" content="Klickbarer Prototyp der HospitalityOS Akquise-Assistenten. Vom Zielkunden zum Termin, mit prüfbarer Selektion, Beleg an jeder Angabe und ohne geratene Anrede.">
+<!-- Nicht in Suchmaschinen. Der Prototyp wird gezielt weitergegeben,
+     er soll nicht über eine Suche gefunden werden. -->
+<meta name="robots" content="noindex, nofollow">
+<!-- Vorschaukarte, damit der Link in WhatsApp und LinkedIn etwas zeigt
+     statt einer nackten Adresse. -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="HospitalityOS">
+<meta property="og:title" content="HospitalityOS · Zielkunden- und Termin-Assistent">
+<meta property="og:description" content="Vom Zielkunden zum Termin. Klickbarer Prototyp, alle Daten sind Beispiele.">
+<meta property="og:locale" content="de_DE">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="%23141619"/><text x="16" y="23" font-family="Georgia,serif" font-size="20" font-weight="700" fill="%23d2a443" text-anchor="middle">H</text></svg>'>
+<style>
+  /* ================================================================
+     HospitalityOS · Zielkunden- und Termin-Assistent · Prototyp
+     Farbwelt nach der Markenspezifikation, tiefes Anthrazit als Grund,
+     warmes Gold als Akzent, Weiss fuer Text.
+     Eine einzige Datei, keine fremden Bibliotheken, laeuft auch offline.
+     ================================================================ */
+  :root {
+    --anthrazit: #141619;
+    --anthrazit-tief: #0e1013;
+    --gold: #d2a443;
+    --gold-tief: #a87f2c;
+    --elfenbein: #faf8f3;
+    --weiss: #ffffff;
+    --text: #23252a;
+    --text-leise: #61656e;
+    --linie: #e6e2d8;
+    --gruen: #2f6b4f;
+    --gruen-hell: #eef6f1;
+    --rot: #a33a32;
+    --rot-hell: #fdf0ef;
+    --gelb-hell: #fdf8ee;
+    --lila: #6b4a86;
+    --lila-hell: #f3eef8;
+    --schatten: 0 1px 2px rgba(20,22,25,.06), 0 8px 24px rgba(20,22,25,.05);
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--elfenbein); color: var(--text);
+    font-size: 15px; line-height: 1.55; -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, h4 { font-weight: 700; line-height: 1.25; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  a { color: var(--gold-tief); }
+  ul { list-style: none; }
+
+  /* ---------------------------------------------------------- Geruest
+     Die Seitenleiste ist NICHT fest breit. Eine feste Leiste verdraengt
+     auf schmalen Bildschirmen den Inhalt und macht ihn unerreichbar.
+     Deshalb wandert sie unterhalb von 900px nach oben. */
+  .app { display: flex; min-height: 100%; }
+  .nav {
+    width: 258px; flex: 0 0 258px; background: var(--anthrazit);
+    display: flex; flex-direction: column; gap: 24px; padding: 22px 16px;
+  }
+  .marke { display: flex; align-items: center; gap: 11px; padding: 0 8px; }
+  .monogramm {
+    width: 38px; height: 38px; flex: 0 0 38px; border-radius: 9px;
+    background: linear-gradient(150deg, #1d2026, #101216);
+    border: 1px solid rgba(210,164,67,.35);
+    display: grid; place-items: center;
+    font-family: Georgia, "Times New Roman", serif; font-size: 21px;
+    font-weight: 700; color: var(--gold);
+  }
+  .marke-text { display: flex; flex-direction: column; min-width: 0; }
+  .marke-name { font-size: 15px; font-weight: 700; color: #fff; letter-spacing: .01em; }
+  .marke-sub { font-size: 10.5px; font-weight: 700; letter-spacing: .14em;
+               text-transform: uppercase; color: var(--gold); }
+  .nav-gruppe { display: flex; flex-direction: column; gap: 3px; }
+  .nav-titel { font-size: 10px; font-weight: 800; letter-spacing: .15em;
+               text-transform: uppercase; color: rgba(255,255,255,.34);
+               padding: 0 12px 5px; }
+  .nav-punkt {
+    display: flex; align-items: center; gap: 11px; width: 100%;
+    padding: 10px 12px; border-radius: 9px; min-height: 44px;
+    color: rgba(255,255,255,.68); font-size: 14.5px; text-align: left;
+  }
+  .nav-punkt:hover { background: rgba(255,255,255,.06); color: #fff; }
+  .nav-punkt[aria-current="page"] { background: rgba(210,164,67,.14); color: #fff; font-weight: 600; }
+  .nav-punkt[aria-current="page"] .nav-icon { color: var(--gold); }
+  .nav-icon { width: 19px; flex: 0 0 19px; text-align: center; color: rgba(255,255,255,.5); }
+  .nav-zahl {
+    margin-left: auto; font-size: 12px; font-weight: 700; padding: 1px 8px;
+    border-radius: 999px; background: rgba(210,164,67,.18); color: var(--gold);
+  }
+  .nav-fuss { margin-top: auto; display: flex; flex-direction: column; gap: 12px; }
+  .nav-hinweis {
+    background: rgba(255,255,255,.05); border-radius: 10px; padding: 12px 13px;
+    font-size: 12.5px; line-height: 1.5; color: rgba(255,255,255,.62);
+  }
+  .nav-hinweis b { color: rgba(255,255,255,.9); }
+  .nutzer { display: flex; align-items: center; gap: 10px; padding: 0 4px; }
+  .nutzer-kreis {
+    width: 34px; height: 34px; flex: 0 0 34px; border-radius: 999px;
+    background: var(--gold); color: var(--anthrazit);
+    display: grid; place-items: center; font-size: 12.5px; font-weight: 800;
+  }
+  .nutzer-name { font-size: 13.5px; font-weight: 600; color: #fff; }
+  .nutzer-rolle { font-size: 11.5px; color: rgba(255,255,255,.5); }
+
+  .inhalt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .kopf {
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    padding: 18px 26px; background: var(--weiss); border-bottom: 1px solid var(--linie);
+  }
+  .kopf-text { min-width: 0; flex: 1; }
+  .kopf-kicker { font-size: 11px; font-weight: 700; letter-spacing: .13em;
+                 text-transform: uppercase; color: var(--gold-tief); }
+  .kopf-titel { font-size: 21px; }
+  .bahn { flex: 1; min-width: 0; overflow-y: auto; padding: 22px 26px 60px; }
+
+  /* Der Betriebs-Umschalter. Er ist der Grund, warum derselbe Link bei
+     drei sehr verschiedenen Haeusern gezeigt werden kann. */
+  .umschalter { display: flex; gap: 4px; background: #f2f1ed; padding: 4px;
+                border-radius: 999px; flex-wrap: wrap; }
+  .umschalter button { padding: 7px 14px; border-radius: 999px; font-size: 13px;
+                       font-weight: 600; color: var(--text-leise); min-height: 36px; }
+  .umschalter button[aria-pressed="true"] { background: var(--anthrazit); color: #fff; }
+
+  /* ------------------------------------------------------------ Bausteine */
+  .karte { background: var(--weiss); border: 1px solid var(--linie);
+           border-radius: var(--radius); box-shadow: var(--schatten); }
+  .karte-kopf { display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+                padding: 15px 18px; border-bottom: 1px solid var(--linie); }
+  .karte-titel { font-size: 15.5px; }
+  .karte-leib { padding: 16px 18px; }
+  .gitter { display: grid; gap: 14px; }
+  .g4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .g3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .g2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .g-haupt { grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); align-items: start; }
+  .stapel { display: flex; flex-direction: column; gap: 14px; }
+  .reihe { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+  .kennzahl { background: var(--weiss); border: 1px solid var(--linie);
+              border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--schatten); }
+  .kennzahl-label { font-size: 11px; font-weight: 700; letter-spacing: .1em;
+                    text-transform: uppercase; color: var(--text-leise); }
+  .kennzahl-wert { font-size: 30px; font-weight: 800; line-height: 1.15; margin-top: 4px;
+                   font-variant-numeric: tabular-nums; }
+  .kennzahl-note { font-size: 12.5px; color: var(--text-leise); margin-top: 2px; }
+  .kennzahl-note.gut { color: var(--gruen); font-weight: 600; }
+  .kennzahl-note.warn { color: var(--rot); font-weight: 600; }
+
+  .pille { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px;
+           border-radius: 999px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+  .p-gold { background: rgba(210,164,67,.16); color: var(--gold-tief); }
+  .p-gruen { background: var(--gruen-hell); color: var(--gruen); }
+  .p-rot { background: var(--rot-hell); color: var(--rot); }
+  .p-grau { background: #f0f0ee; color: var(--text-leise); }
+  .p-lila { background: var(--lila-hell); color: var(--lila); }
+
+  /* Die Farbkodierung stammt aus der Akquiseliste des Hauses. Sie ist das
+     Statusfeld des Assistenten und wurde nicht neu erfunden, sondern
+     uebernommen. */
+  .status { display: inline-flex; align-items: center; gap: 7px; font-size: 13px;
+            font-weight: 600; white-space: nowrap; }
+  .status-punkt { width: 11px; height: 11px; flex: 0 0 11px; border-radius: 999px;
+                  border: 1px solid rgba(20,22,25,.25); }
+  .s-weiss   { background: #ffffff; }
+  .s-dunkelgruen { background: #1f5c3d; border-color: #1f5c3d; }
+  .s-hellgruen   { background: #86c8a3; border-color: #6aad88; }
+  .s-grau    { background: #b9b9b2; border-color: #a3a39c; }
+  .s-lila    { background: #6b4a86; border-color: #6b4a86; }
+
+  .knopf { display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+           padding: 11px 18px; border-radius: 9px; font-size: 14.5px; font-weight: 700;
+           min-height: 44px; border: 1px solid transparent; }
+  .k-gold { background: var(--gold); color: #1a1a1a; }
+  .k-gold:hover { background: var(--gold-tief); color: #fff; }
+  .k-dunkel { background: var(--anthrazit); color: #fff; }
+  .k-dunkel:hover { background: #23262c; }
+  .k-rand { border-color: var(--linie); background: var(--weiss); }
+  .k-rand:hover { border-color: var(--gold); }
+  .k-still { color: var(--text-leise); }
+  .k-still:hover { color: var(--text); }
+  .k-klein { padding: 7px 12px; min-height: 36px; font-size: 13px; }
+  .knopf[disabled] { opacity: .45; cursor: not-allowed; }
+
+  .feld { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+  .feld-label { font-size: 11px; font-weight: 700; letter-spacing: .09em;
+                text-transform: uppercase; color: var(--text-leise); }
+  .feld input, .feld textarea, .feld select {
+    font: inherit; width: 100%; padding: 9px 11px; border: 1px solid var(--linie);
+    border-radius: 8px; background: var(--weiss); color: var(--text); min-height: 42px;
+  }
+  .feld textarea { min-height: 84px; resize: vertical; }
+  .feld input:focus, .feld textarea:focus, .feld select:focus {
+    outline: 2px solid rgba(210,164,67,.5); outline-offset: 1px; border-color: var(--gold); }
+
+  .beleg { font-size: 12px; color: var(--text-leise); display: flex; gap: 6px;
+           align-items: baseline; flex-wrap: wrap; }
+  .beleg-zitat { font-style: italic; overflow-wrap: anywhere; }
+
+  .kasten { border-radius: 10px; padding: 13px 15px; border-left: 4px solid; }
+  .kasten-titel { font-size: 11px; font-weight: 800; letter-spacing: .11em;
+                  text-transform: uppercase; margin-bottom: 5px; }
+  .kasten-text { font-size: 13.5px; line-height: 1.55; }
+  .kasten.gold { background: var(--gelb-hell); border-color: var(--gold); }
+  .kasten.gold .kasten-titel { color: var(--gold-tief); }
+  .kasten.rot { background: var(--rot-hell); border-color: var(--rot); }
+  .kasten.rot .kasten-titel { color: var(--rot); }
+  .kasten.gruen { background: var(--gruen-hell); border-color: var(--gruen); }
+  .kasten.gruen .kasten-titel { color: var(--gruen); }
+  .kasten.grau { background: #f5f5f3; border-color: #b9b9b2; }
+  .kasten.grau .kasten-titel { color: var(--text-leise); }
+
+  /* Tabellen duerfen waagerecht scrollen. Ein abgeschnittener Rahmen ist
+     ein stiller Verlust, ein scrollbarer ist Absicht. Ohne das faellt auf
+     schmalen Bildschirmen die letzte Spalte ersatzlos weg. */
+  .tabelle-rahmen { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; min-width: 560px; }
+  th { text-align: left; font-size: 11px; font-weight: 700; letter-spacing: .09em;
+       text-transform: uppercase; color: var(--text-leise);
+       padding: 9px 14px; border-bottom: 1px solid var(--linie); white-space: nowrap; }
+  td { padding: 12px 14px; border-bottom: 1px solid var(--linie); font-size: 14px;
+       vertical-align: top; }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr.klickbar:hover { background: var(--gelb-hell); cursor: pointer; }
+  .zahl { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .rechts { text-align: right; }
+  .breit { overflow-wrap: anywhere; }
+
+  .liste-zeile { display: flex; align-items: center; gap: 14px; padding: 13px 18px;
+                 border-bottom: 1px solid var(--linie); width: 100%; text-align: left;
+                 min-height: 44px; }
+  .liste-zeile:last-child { border-bottom: 0; }
+  .liste-zeile:hover { background: var(--gelb-hell); }
+  .kanal { width: 34px; height: 34px; flex: 0 0 34px; border-radius: 9px;
+           display: grid; place-items: center; font-size: 15px; background: #f2f1ed; }
+  /* Die beiden Zeilen muessen BLOCK sein, sonst laufen sie inline
+     zusammen und lassen sich auf schmalen Bildschirmen nicht umbrechen.
+     Dazu `overflow-wrap`, weil deutsche Komposita wie
+     „Fuehrungskraeftetagung" sonst als ein unteilbares Wort stehen
+     bleiben und den Rahmen sprengen. */
+  .liste-haupt { min-width: 0; flex: 1; }
+  .liste-titel { display: block; font-size: 14.5px; font-weight: 600; overflow-wrap: anywhere; }
+  .liste-sub { display: block; font-size: 12.5px; color: var(--text-leise); overflow-wrap: anywhere; }
+  .liste-rechts { text-align: right; display: flex; flex-direction: column;
+                  gap: 3px; align-items: flex-end; flex-shrink: 0; }
+
+  .schritte { display: flex; gap: 8px; flex-wrap: wrap; }
+  .schritt { display: flex; align-items: center; gap: 8px; padding: 7px 13px;
+             border-radius: 999px; background: #f2f1ed; font-size: 12.5px;
+             font-weight: 600; color: var(--text-leise); }
+  .schritt.aktiv { background: var(--anthrazit); color: #fff; }
+  .schritt.fertig { background: var(--gruen-hell); color: var(--gruen); }
+
+  .reiter { display: flex; gap: 4px; flex-wrap: wrap; }
+  .reiter button { padding: 8px 14px; border-radius: 8px; font-size: 13.5px;
+                   font-weight: 600; color: var(--text-leise); min-height: 40px; }
+  .reiter button[aria-selected="true"] { background: var(--anthrazit); color: #fff; }
+
+  .opener { background: var(--gelb-hell); border: 1px solid rgba(210,164,67,.4);
+            border-radius: 10px; padding: 15px 17px; font-size: 15px; line-height: 1.65;
+            white-space: pre-wrap; overflow-wrap: anywhere; }
+
+  /* Schalter. Bewusst gross genug fuer den Daumen, 44 Pixel Hoehe in
+     der Zeile, damit die Anwendung auch auf dem Handy bedienbar ist. */
+  .schalter-zeile { display: flex; gap: 13px; align-items: flex-start;
+                    padding: 11px 0; border-bottom: 1px solid var(--linie); }
+  .schalter-zeile:last-child { border-bottom: 0; }
+  .schalter { width: 46px; height: 27px; flex: 0 0 46px; border-radius: 999px;
+              background: #d8d6cf; position: relative; transition: background .15s;
+              margin-top: 2px; }
+  .schalter[aria-checked="true"] { background: var(--gruen); }
+  .schalter-knopf { position: absolute; top: 3px; left: 3px; width: 21px; height: 21px;
+                    border-radius: 999px; background: #fff; transition: left .15s;
+                    box-shadow: 0 1px 3px rgba(0,0,0,.25); }
+  .schalter[aria-checked="true"] .schalter-knopf { left: 22px; }
+  .schalter:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+  .schalter-text { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .schalter-text b { font-size: 14.5px; }
+  .schalter-text span { font-size: 13px; color: var(--text-leise); }
+
+  .marke-pille { display: inline-flex; align-items: center; gap: 7px; padding: 6px 8px 6px 13px;
+                 border-radius: 999px; background: rgba(210,164,67,.16); color: var(--gold-tief);
+                 font-size: 13px; font-weight: 700; }
+  .marke-pille button { width: 22px; height: 22px; border-radius: 999px; font-size: 12px;
+                        color: var(--gold-tief); background: rgba(255,255,255,.7); }
+  .marke-pille button:hover { background: #fff; color: var(--rot); }
+
+  .fuss { padding: 18px 26px 26px; color: var(--text-leise); font-size: 12px;
+          border-top: 1px solid var(--linie); background: var(--weiss); }
+
+  /* ------------------------------------------------------------- Schmal
+     Ab hier wandert die Navigation nach oben. Nichts wird abgeschnitten,
+     alles bleibt erreichbar. */
+  @media (max-width: 900px) {
+    .app { flex-direction: column; }
+    .nav { width: 100%; flex: none; flex-direction: row; align-items: center;
+           gap: 12px; padding: 12px 14px; overflow-x: auto; }
+    .marke { flex: 0 0 auto; padding: 0; }
+    .marke-text { display: none; }
+    .nav-gruppe { flex-direction: row; gap: 4px; }
+    .nav-titel { display: none; }
+    .nav-punkt { padding: 9px 12px; white-space: nowrap; }
+    .nav-icon { display: none; }
+    .nav-fuss { display: none; }
+    .kopf, .bahn, .fuss { padding-left: 16px; padding-right: 16px; }
+    .g4, .g3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .g2, .g-haupt { grid-template-columns: minmax(0, 1fr); }
+    .kennzahl-wert { font-size: 25px; }
+  }
+  @media (max-width: 480px) {
+    .g4, .g3 { grid-template-columns: minmax(0, 1fr); }
+    .kopf-titel { font-size: 18px; }
+  }
+</style>
+</head>
+<body>
+<div id="wurzel"></div>
+
+<script>
+/* ==================================================================
+   HospitalityOS · Zielkunden- und Termin-Assistent · Prototyp
+   ------------------------------------------------------------------
+   WAS DAS IST
+     Ein klickbarer Prototyp, kein Produkt. Alle Haeuser, Firmen,
+     Personen und Zahlen sind erfunden. Es geht ausschliesslich um den
+     Ablauf und um die Bedienung.
+
+   DIE ZWEI ASSISTENTEN
+     Zielkunden-Assistent   findet und selektiert Haeuser, und legt
+                            offen, was er verworfen hat und warum.
+     Termin-Assistent       fuehrt die Liste, formuliert den Einstieg,
+                            begleitet das Telefonat und schreibt das
+                            Ergebnis zurueck.
+     Sie bleiben getrennt, weil genau diese Trennung den Selektions-
+     schritt als PRUEFBARE Stufe erhaelt.
+
+   WAS DIESER PROTOTYP BEWUSST ANDERS MACHT
+     Jeder Punkt hat einen Grund, und der steht dabei.
+     1. Die Selektion ist pruefbar. Jede verworfene Firma steht mit
+        Namen, verletztem Kriterium und Beleg da, und laesst sich mit
+        einem Klick ueberstimmen.
+     2. Jede Angabe traegt ihre Quelle und ihr Abrufdatum.
+     3. Die Anrede wird NIE aus dem Vornamen erraten. Ist sie nicht
+        belegt, formuliert der Assistent ohne Anrede.
+     4. Es gibt keine Obergrenze bei der Firmengroesse. Grosse Haeuser
+        sind ausdruecklich das Ziel.
+     5. Reine Tagungen sind ein Ausschlusskriterium.
+     6. Die Interessenten-Ebene ist da, per Klick wird aus dem
+        Interessenten ein Kunde.
+     7. Die Statuslogik ist die uebernommene Farbkodierung aus der
+        Akquiseliste, keine neu erfundene.
+     8. Rufnummern stehen im internationalen Format, sonst baut die
+        Telefonanlage die Verbindung nicht auf.
+
+   UMBAU AUF EINEN ECHTEN BETRIEB
+     Nur den Block BETRIEBE anfassen. Alles andere bleibt.
+   ================================================================== */
+
+/* ------------------------------------------------------------------
+   Guete einer Angabe.
+   belegt     = steht woertlich in der genannten Quelle
+   abgeleitet = aus der Quelle geschlossen, plausibel, nicht gesagt
+   fehlt      = steht nirgends, wird nicht geraten
+   ------------------------------------------------------------------ */
+
+const BETRIEBE = {
+
+  /* ============================================================ 1 */
+  stern: {
+    schluessel: 'stern',
+    reiter: 'Sternerestaurant',
+    haus: 'Haus Kranichstein',
+    zusatz: 'Fine Dining mit zwei Veranstaltungsräumen',
+    ort: 'Hamburg, Elbvororte',
+    nutzer: 'Marek Sanders',
+    rolle: 'Vertrieb und Veranstaltungen',
+    regeln: {
+      radiusMin: 30, mindestGroesse: 20, obergrenzeAn: false, obergrenze: 500,
+      anlassPflicht: false,
+      anlaesse: ['Kundendinner', 'Weihnachtsfeier', 'Sommerfest', 'Jubiläum', 'Abteilungsessen'],
+      schalter: { liquidation: true, dublette: true, zweitstandort: true, tagung: true, eigenversorger: true }
+    },
+    schalter: [
+      { schluessel: 'tagung', regel: 'Reine Tagungen, das ist ausdrücklich nicht unsere Kernkompetenz', grund: 'Reines Tagungsgeschäft' },
+      { schluessel: 'eigenversorger', regel: 'Häuser mit eigener Gastronomie, sie feiern bei sich selbst', grund: 'Eigene Gastronomie im Haus' },
+      { schluessel: 'liquidation', regel: 'Firmen in Liquidation oder ohne aktiven Handelsregistereintrag', grund: 'In Liquidation' },
+      { schluessel: 'dublette', regel: 'Filialen und Zweitmarken derselben Gesellschaft, nur einmal ansprechen', grund: 'Dublette' },
+      { schluessel: 'zweitstandort', regel: 'Zweitstandorte, deren Entscheidung nachweislich in der Zentrale liegt', grund: 'Entscheidung liegt in der Zentrale' }
+    ],
+    schluss: 'Ich rufe an, weil wir für genau solche Abende ein Haus haben, das nicht jeder kennt.',
+    lauf: { datum: '18.08.2026, 06:40 Uhr', dauer: '4 Minuten' },
+    firmen: [
+      { firma: 'Nordwerft Kapitalpartner AG', ort: 'Othmarschen', fahrzeit: 7, mitarbeiter: 240,
+        anlass: 'Jährliches Investorendinner im November', anlassArt: 'Kundendinner',
+        quelle: 'Unternehmenswebsite, Bereich Presse', abruf: '18.08.2026',
+        zitat: 'Auch in diesem Jahr laden wir unsere Partner zum Jahresabschluss ein.', guete: 'belegt',
+        passung: 'stark', warum: 'Exklusives Kundendinner in genau unserer Größenordnung, dazu sieben Minuten entfernt.',
+        merkmale: {} },
+      { firma: 'Hanseatische Rückversicherung SE', ort: 'HafenCity', fahrzeit: 22, mitarbeiter: 1900,
+        anlass: 'Bereichsweihnachtsfeiern, mehrere pro Jahr', anlassArt: 'Weihnachtsfeier',
+        quelle: 'Karriereseite, Abschnitt Unternehmenskultur', abruf: '18.08.2026',
+        zitat: 'Jeder Bereich gestaltet seine Weihnachtsfeier selbst.', guete: 'belegt',
+        passung: 'stark', warum: 'Mehrere Feiern pro Jahr, jede eine eigene Anfrage. Konzerngröße ist hier der Vorteil.',
+        merkmale: {} },
+      { firma: 'Steinweg Chemie Holding GmbH', ort: 'Bahrenfeld', fahrzeit: 9, mitarbeiter: 780,
+        anlass: 'Firmenjubiläum, 75 Jahre, im kommenden Frühjahr', anlassArt: 'Jubiläum',
+        quelle: 'Handelsregister und Unternehmenschronik', abruf: '18.08.2026',
+        zitat: 'Gegründet 1951 in Hamburg Bahrenfeld.', guete: 'abgeleitet',
+        passung: 'stark', warum: 'Das Jubiläum ist aus dem Gründungsjahr gerechnet, nicht angekündigt. Deshalb abgeleitet.',
+        merkmale: {} },
+      { firma: 'Elbmarsch Automobile GmbH', ort: 'Nienstedten', fahrzeit: 9, mitarbeiter: 310,
+        anlass: 'Modellpremieren mit geladenen Kunden', anlassArt: 'Kundendinner',
+        quelle: 'Veranstaltungsarchiv der Unternehmensseite', abruf: '18.08.2026',
+        zitat: 'Premierenabend für unsere Kundinnen und Kunden.', guete: 'belegt',
+        passung: 'gut', warum: 'Premium-Handel mit eigener Event-Kultur und sehr nah. Die Entscheidung liegt am Standort.',
+        merkmale: {} },
+      { firma: 'Voigt und Halbach Notare', ort: 'Neuer Wall', fahrzeit: 20, mitarbeiter: 45,
+        anlass: 'Kein Anlass belegt', anlassArt: null,
+        quelle: 'Unternehmenswebsite', abruf: '18.08.2026',
+        zitat: '', guete: 'fehlt',
+        passung: 'mittel', warum: 'Größe und Lage passen, ein Veranstaltungsanlass ist nicht belegt.',
+        merkmale: {} },
+      { firma: 'Kontor Sieben Projektentwicklung', ort: 'Altstadt', fahrzeit: 21, mitarbeiter: 60,
+        anlass: 'Richtfeste und Investorenabende', anlassArt: 'Kundendinner',
+        quelle: 'Projektseite und Fachpresse', abruf: '18.08.2026',
+        zitat: 'Zum Richtfest kamen rund achtzig Gäste.', guete: 'belegt',
+        passung: 'gut', warum: 'Projektentwickler feiern anlassbezogen und regelmäßig, die Gästezahl passt zum Haus.',
+        merkmale: {} },
+      { firma: 'Tagungswerk Alster GmbH', ort: 'Eimsbüttel', fahrzeit: 16, mitarbeiter: 70,
+        anlass: 'Seminarbetrieb', anlassArt: null, quelle: 'Eigenbeschreibung der Website', abruf: '18.08.2026',
+        zitat: 'Ihr Partner für Seminare und Schulungen.', guete: 'belegt', passung: 'schwach',
+        warum: 'Der Betrieb ist auf Seminare ausgelegt.',
+        merkmale: { tagung: 'Eigenbeschreibung, „Ihr Partner für Seminare und Schulungen"' } },
+      { firma: 'Konferenzhaus Rotherbaum', ort: 'Rotherbaum', fahrzeit: 24, mitarbeiter: 55,
+        anlass: 'Seminarbetrieb', anlassArt: null, quelle: 'Leistungsübersicht der Website', abruf: '18.08.2026',
+        zitat: 'Seminare, Schulungen und Workshops.', guete: 'belegt', passung: 'schwach',
+        warum: 'Die Leistungsübersicht nennt ausschließlich Seminarformate.',
+        merkmale: { tagung: 'Leistungsübersicht nennt ausschließlich Seminarformate' } },
+      { firma: 'Landhotel Sielbeck', ort: 'Rissen', fahrzeit: 26, mitarbeiter: 40,
+        anlass: 'Eigene Veranstaltungen', anlassArt: null, quelle: 'Unternehmenswebsite', abruf: '18.08.2026',
+        zitat: 'Unser Restaurant mit 90 Plätzen.', guete: 'belegt', passung: 'schwach',
+        warum: 'Das Haus versorgt sich selbst.',
+        merkmale: { eigenversorger: 'Website, „unser Restaurant mit 90 Plätzen"' } },
+      { firma: 'Golfclub Elbhöhe e.V.', ort: 'Blankenese', fahrzeit: 14, mitarbeiter: 35,
+        anlass: 'Clubabende', anlassArt: null, quelle: 'Vereinsseite', abruf: '18.08.2026',
+        zitat: 'Unser Clubhaus bewirtet Sie ganzjährig.', guete: 'belegt', passung: 'schwach',
+        warum: 'Der Club hat eigene Gastronomie.',
+        merkmale: { eigenversorger: 'Clubhaus mit eigenem Restaurantbetrieb' } },
+      { firma: 'Nordlicht Consulting GmbH i. L.', ort: 'Winterhude', fahrzeit: 25, mitarbeiter: 90,
+        anlass: 'Kein Anlass belegt', anlassArt: null, quelle: 'Handelsregister', abruf: '18.08.2026',
+        zitat: 'Gesellschaft in Liquidation seit Februar 2025.', guete: 'belegt', passung: 'schwach',
+        warum: 'Eine Ansprache liefe ins Leere.',
+        merkmale: { liquidation: 'Handelsregister, Zusatz „i. L."' } },
+      { firma: 'Möbelhaus Rehder KG', ort: 'Buxtehude', fahrzeit: 52, mitarbeiter: 130,
+        anlass: 'Jubiläumsfeier', anlassArt: 'Jubiläum', quelle: 'Regionalpresse', abruf: '18.08.2026',
+        zitat: 'Zum Jubiläum feierte die Belegschaft.', guete: 'belegt', passung: 'mittel',
+        warum: 'Passt inhaltlich, liegt aber außerhalb des Einzugsgebiets.',
+        merkmale: {} },
+      { firma: 'Werft Cuxhaven Service', ort: 'Cuxhaven', fahrzeit: 104, mitarbeiter: 260,
+        anlass: 'Betriebsfest', anlassArt: 'Sommerfest', quelle: 'Karriereseite', abruf: '18.08.2026',
+        zitat: 'Unser Betriebsfest im Sommer.', guete: 'belegt', passung: 'schwach',
+        warum: 'Deutlich außerhalb des Einzugsgebiets.',
+        merkmale: {} },
+      { firma: 'Elbmarsch Automobile Filiale Pinneberg', ort: 'Pinneberg', fahrzeit: 28, mitarbeiter: 95,
+        anlass: 'Modellpremieren', anlassArt: 'Kundendinner', quelle: 'Handelsregister', abruf: '18.08.2026',
+        zitat: 'Zweigniederlassung der Elbmarsch Automobile GmbH.', guete: 'belegt', passung: 'schwach',
+        warum: 'Dieselbe Gesellschaft wie ein bereits aufgenommener Treffer.',
+        merkmale: { dublette: 'Gleiche Handelsregisternummer wie Elbmarsch Automobile GmbH' } },
+      { firma: 'Bäckerei Timm und Söhne', ort: 'Ottensen', fahrzeit: 11, mitarbeiter: 11,
+        anlass: 'Kein Anlass belegt', anlassArt: null, quelle: 'Impressum und Stellenportal', abruf: '18.08.2026',
+        zitat: '', guete: 'fehlt', passung: 'schwach',
+        warum: 'Betrieb zu klein für die Formate des Hauses.',
+        merkmale: {} },
+      { firma: 'Praxis Dr. Lehnhoff', ort: 'Othmarschen', fahrzeit: 6, mitarbeiter: 6,
+        anlass: 'Kein Anlass belegt', anlassArt: null, quelle: 'Teamseite der Praxis', abruf: '18.08.2026',
+        zitat: '', guete: 'fehlt', passung: 'schwach',
+        warum: 'Betrieb zu klein für die Formate des Hauses.',
+        merkmale: {} },
+      { firma: 'Seehandel Bremen AG, Standort Hamburg', ort: 'Speicherstadt', fahrzeit: 23, mitarbeiter: 420,
+        anlass: 'Jahresempfang', anlassArt: 'Kundendinner', quelle: 'Pressestelle des Konzerns', abruf: '18.08.2026',
+        zitat: 'Veranstaltungen werden zentral geplant.', guete: 'belegt', passung: 'schwach',
+        warum: 'Der Standort entscheidet nicht selbst.',
+        merkmale: { zweitstandort: 'Pressestelle verweist auf die Konzernzentrale in Bremen' } },
+      { firma: 'Fährhaus Blankenese Betriebs GmbH', ort: 'Blankenese', fahrzeit: 13, mitarbeiter: 60,
+        anlass: 'Eigene Veranstaltungen', anlassArt: null, quelle: 'Unternehmensregister', abruf: '18.08.2026',
+        zitat: 'Gegenstand ist der Betrieb einer Gastronomie.', guete: 'belegt', passung: 'schwach',
+        warum: 'Gastronomiebetrieb ist der Unternehmenszweck.',
+        merkmale: { eigenversorger: 'Gastronomiebetrieb ist der Unternehmenszweck' } }
+    ],
+    kontakte: [
+      {
+        id: 'K-01', firma: 'Nordwerft Kapitalpartner AG', person: 'Dr. Katrin Möller',
+        anredeBelegt: true, anrede: 'Frau', anredeQuelle: 'Signatur einer früheren E-Mail vom 04.06.2026',
+        rolleP: 'Leitung Unternehmenskommunikation', telefon: '+49 40 22874130', durchwahl: true,
+        status: 'dunkelgruen', ebene: 'Interessent', heute: true,
+        fundort: 'Unternehmenswebsite, Bereich Presse',
+        historie: [
+          { datum: '04.06.2026', text: 'Erreicht, Erlaubnis für eine Mail erteilt' },
+          { datum: '05.06.2026', text: 'Unterlagen verschickt, keine Antwort' }
+        ],
+        notiz: 'Das Investorendinner im November steht auf der eigenen Presseseite.',
+        einstieg: 'Ich habe gelesen, dass Sie im November wieder Ihre Partner zum Jahresabschluss einladen.'
+      },
+      {
+        id: 'K-02', firma: 'Hanseatische Rückversicherung SE', person: 'Miriam Voss',
+        anredeBelegt: true, anrede: 'Frau', anredeQuelle: 'Persönliche Vorstellung im Telefonat vom 12.05.2026',
+        rolleP: 'Assistenz des Vorstands', telefon: '+49 40 30119045', durchwahl: true,
+        status: 'dunkelgruen', ebene: 'Interessent', heute: true,
+        fundort: 'Karriereseite, Abschnitt Unternehmenskultur',
+        historie: [
+          { datum: '12.05.2026', text: 'Erreicht, um Wiedervorlage im Spätsommer gebeten' }
+        ],
+        notiz: 'Sie hat im Mai selbst um einen Anruf im Spätsommer gebeten, das ist heute.',
+        einstieg: 'Sie hatten mich im Mai gebeten, mich im Spätsommer noch einmal zu melden.'
+      },
+      {
+        id: 'K-03', firma: 'Steinweg Chemie Holding GmbH', person: 'Nele Wichmann',
+        anredeBelegt: false, anrede: '', anredeQuelle: '',
+        rolleP: 'Office Management', telefon: '+49 40 89204471', durchwahl: true,
+        status: 'dunkelgruen', ebene: 'Interessent', heute: true,
+        fundort: 'Handelsregister und Unternehmenschronik',
+        historie: [],
+        notiz: 'Das 75. Jubiläum ist aus dem Gründungsjahr gerechnet und nicht bestätigt. Genau das ist die Einstiegsfrage.',
+        einstieg: 'Wenn ich richtig gerechnet habe, steht bei Ihnen im nächsten Frühjahr das 75. Jubiläum an.'
+      },
+      {
+        id: 'K-04', firma: 'Elbmarsch Automobile GmbH', person: 'Luca Brandt',
+        anredeBelegt: false, anrede: '', anredeQuelle: '',
+        rolleP: 'Marketing und Events', telefon: '+49 40 55613820', durchwahl: true,
+        status: 'weiss', ebene: 'Interessent', heute: false,
+        fundort: 'Veranstaltungsarchiv der Unternehmensseite',
+        historie: [],
+        notiz: 'Der Premierenabend im Veranstaltungsarchiv zeigt Anlass und Budget.',
+        einstieg: 'Ich habe gesehen, dass Sie Ihre Modellpremieren mit geladenen Kunden feiern.'
+      },
+      {
+        id: 'K-05', firma: 'Kontor Sieben Projektentwicklung', person: 'Silke Ahrends',
+        anredeBelegt: true, anrede: 'Frau', anredeQuelle: 'Signatur der Anfrage vom 19.03.2026',
+        rolleP: 'Prokuristin', telefon: '+49 40 41772290', durchwahl: true,
+        status: 'lila', ebene: 'Kunde', heute: false,
+        fundort: 'Projektseite und Fachpresse',
+        historie: [
+          { datum: '19.03.2026', text: 'Richtfest mit 80 Gästen im Haus, Abrechnung abgeschlossen' }
+        ],
+        notiz: 'Bestandskunde. Das nächste Projekt geht laut Fachpresse im Herbst ins Richtfest.',
+        einstieg: 'Nach Ihrem Richtfest im März bei uns habe ich gelesen, dass im Herbst das nächste ansteht.'
+      },
+      {
+        id: 'K-06', firma: 'Voigt und Halbach Notare', person: 'Jonas Bergmann',
+        anredeBelegt: false, anrede: '', anredeQuelle: '',
+        rolleP: 'Büroleitung', telefon: '+49 40 36698114', durchwahl: true,
+        status: 'grau', ebene: 'Interessent', heute: false,
+        fundort: 'Unternehmenswebsite',
+        historie: [
+          { datum: '22.04.2026', text: 'Erreicht, aktuell kein Bedarf, Wiedervorlage in einem Jahr' }
+        ],
+        notiz: 'Kein belegter Anlass. Der Assistent schlägt hier bewusst keinen Anruf vor.',
+        einstieg: null
+      }
+    ],
+    einwaende: [
+      { frage: 'Schicken Sie einfach Unterlagen.', antwort: 'Das mache ich gern. Damit die Unterlagen zu Ihrem Anlass passen, brauche ich zwei Angaben, den Monat und die ungefähre Personenzahl.' },
+      { frage: 'Wir haben schon ein Haus.', antwort: 'Das freut mich, dann läuft es. Für den Fall, dass es einmal ausgebucht ist oder ein zweiter Termin dazukommt, hinterlege ich Sie als Alternative.' },
+      { frage: 'Dafür bin ich nicht zuständig.', antwort: 'Danke für die Offenheit. Wer entscheidet bei Ihnen über Veranstaltungen dieser Größe, und darf ich mich auf Sie berufen?' },
+      { frage: 'Das ist uns zu teuer.', antwort: 'Verstehe. Darf ich fragen, mit welchem Rahmen Sie planen? Dann sage ich Ihnen ehrlich, ob wir zusammenkommen, statt Ihnen etwas zu schicken, das nicht passt.' }
+    ],
+    nuggets: [
+      { art: 'Erfolgreiche Formulierung', assistent: 'termin', text: 'Der Einstieg über einen selbst veröffentlichten Anlass führt deutlich häufiger zum Gespräch als eine allgemeine Vorstellung.', herkunft: 'aus 34 Gesprächen' },
+      { art: 'Gesprächsposition', assistent: 'termin', text: 'Die Assistenz setzt um, die Bereichsleitung entscheidet. Wer bei der Assistenz anfängt, bekommt den Namen, nicht die Zusage.', herkunft: 'aus 41 Gesprächen' },
+      { art: 'Saisonmuster', assistent: 'ziel', text: 'Weihnachtsfeiern werden zwischen Ende August und Mitte Oktober vergeben. Wer im November anruft, ist zu spät.', herkunft: 'aus zwei Jahren Buchungsdaten' },
+      { art: 'Branchen-Benchmarking', assistent: 'ziel', text: 'Kanzleien und Vermögensverwalter buchen kleiner, aber mit höherem Betrag je Gast als Industriebetriebe.', herkunft: 'aus 96 abgeschlossenen Veranstaltungen' }
+    ]
+  },
+
+  /* ============================================================ 2 */
+  tagung: {
+    schluessel: 'tagung',
+    reiter: 'Tagungshotel',
+    haus: 'Landgut Rosenhöhe',
+    zusatz: 'Hotel, Restaurant und Eventscheune',
+    ort: 'Umland, eine Autostunde von der Stadt',
+    nutzer: 'Nina Wolters',
+    rolle: 'Bankett und Verkauf',
+    regeln: {
+      radiusMin: 75, mindestGroesse: 40, obergrenzeAn: false, obergrenze: 1500,
+      anlassPflicht: false,
+      anlaesse: ['Führungskräftetagung', 'Klausurtagung', 'Fachtagung', 'Sommerfest', 'Weihnachtsfeier'],
+      schalter: { liquidation: true, dublette: true, zweitstandort: true, eigenversorger: true, keinBudget: true, kleinveranstaltung: true }
+    },
+    schalter: [
+      { schluessel: 'eigenversorger', regel: 'Häuser mit eigenem Tagungszentrum', grund: 'Eigenes Tagungszentrum' },
+      { schluessel: 'keinBudget', regel: 'Anfragen ohne belegtes Budget für Übernachtung', grund: 'Kein Übernachtungsbudget belegt' },
+      { schluessel: 'kleinveranstaltung', regel: 'Tagesveranstaltungen ohne Übernachtung unter 20 Personen', grund: 'Zu kleine Veranstaltung' },
+      { schluessel: 'liquidation', regel: 'Firmen in Liquidation oder ohne aktiven Handelsregistereintrag', grund: 'In Liquidation' },
+      { schluessel: 'dublette', regel: 'Filialen und Zweitmarken derselben Gesellschaft, nur einmal ansprechen', grund: 'Dublette' },
+      { schluessel: 'zweitstandort', regel: 'Zweitstandorte, deren Entscheidung nachweislich in der Zentrale liegt', grund: 'Entscheidung liegt in der Zentrale' }
+    ],
+    schluss: 'Ich rufe an, weil wir für genau solche Tagungen ein Haus haben, in dem man wirklich aus dem Alltag herauskommt.',
+    lauf: { datum: '18.08.2026, 06:40 Uhr', dauer: '4 Minuten' },
+    firmen: [
+      { firma: 'Rheinberger Maschinenbau AG', ort: 'Hauptsitz', fahrzeit: 48, mitarbeiter: 2400,
+        anlass: 'Jährliche Führungskräftetagung mit zwei Übernachtungen', anlassArt: 'Führungskräftetagung',
+        quelle: 'Geschäftsbericht, Kapitel Personalentwicklung', abruf: '18.08.2026',
+        zitat: 'Unsere Führungskräfte kommen einmal jährlich für zwei Tage zusammen.', guete: 'belegt',
+        passung: 'stark', warum: 'Zwei Übernachtungen für eine große Gruppe, der wertvollste Anlass im Haus.',
+        merkmale: {} },
+      { firma: 'Fenrich Versicherungsgruppe', ort: 'Zentrale', fahrzeit: 61, mitarbeiter: 850,
+        anlass: 'Vertriebskonferenz im Januar', anlassArt: 'Fachtagung',
+        quelle: 'Pressemitteilung vom Vorjahr', abruf: '18.08.2026',
+        zitat: 'Rund 200 Vertriebspartner trafen sich im Januar.', guete: 'belegt',
+        passung: 'stark', warum: 'Die Gruppengröße passt genau auf Eventscheune und Zimmerkontingent.',
+        merkmale: {} },
+      { firma: 'Adlerhof Lebensmittelwerke GmbH', ort: 'Werk Nord', fahrzeit: 39, mitarbeiter: 620,
+        anlass: 'Sommerfest für Belegschaft und Familien', anlassArt: 'Sommerfest',
+        quelle: 'Karriereseite, Abschnitt Benefits', abruf: '18.08.2026',
+        zitat: 'Unser Sommerfest ist fest im Kalender.', guete: 'belegt',
+        passung: 'gut', warum: 'Familienformat, dafür ist der Außenbereich das stärkste Argument.',
+        merkmale: {} },
+      { firma: 'Nordlab Diagnostik SE', ort: 'Campus', fahrzeit: 54, mitarbeiter: 1150,
+        anlass: 'Klausurtagung der Geschäftsleitung, Termin nicht belegt', anlassArt: 'Klausurtagung',
+        quelle: 'Unternehmensblog', abruf: '18.08.2026',
+        zitat: 'Wir ziehen uns für die Jahresplanung bewusst zurück.', guete: 'abgeleitet',
+        passung: 'gut', warum: 'Dass es eine Klausur gibt, ist belegt. Wann sie stattfindet, ist es nicht.',
+        merkmale: {} },
+      { firma: 'Bauunion Westtor GmbH und Co. KG', ort: 'Bauhof', fahrzeit: 33, mitarbeiter: 410,
+        anlass: 'Kein Anlass belegt', anlassArt: null,
+        quelle: 'Unternehmenswebsite', abruf: '18.08.2026',
+        zitat: '', guete: 'fehlt',
+        passung: 'mittel', warum: 'Größe und Entfernung passen, ein Anlass ist nicht belegt.',
+        merkmale: {} },
+      { firma: 'Institut für Werkstoffprüfung Nordwest', ort: 'Institutsgelände', fahrzeit: 68, mitarbeiter: 95,
+        anlass: 'Fachtagung mit externen Gästen', anlassArt: 'Fachtagung',
+        quelle: 'Veranstaltungsarchiv des Instituts', abruf: '18.08.2026',
+        zitat: 'Zur Fachtagung reisten 120 Gäste an.', guete: 'belegt',
+        passung: 'gut', warum: 'Externe Gäste bedeuten Übernachtung, das ist der Unterschied zur Tagesveranstaltung.',
+        merkmale: {} },
+      { firma: 'Konzernakademie Süd GmbH', ort: 'Campus Süd', fahrzeit: 55, mitarbeiter: 300,
+        anlass: 'Eigene Seminare', anlassArt: null, quelle: 'Unternehmenswebsite', abruf: '18.08.2026',
+        zitat: 'Unser Campus mit 14 Seminarräumen.', guete: 'belegt', passung: 'schwach',
+        warum: 'Das Haus tagt bei sich selbst.',
+        merkmale: { eigenversorger: 'Website, „unser Campus mit 14 Seminarräumen"' } },
+      { firma: 'Sparkassen-Bildungswerk Nord', ort: 'Bildungszentrum', fahrzeit: 44, mitarbeiter: 260,
+        anlass: 'Eigene Seminare', anlassArt: null, quelle: 'Unternehmenswebsite', abruf: '18.08.2026',
+        zitat: 'Unsere Tagungsstätte mit Übernachtung.', guete: 'belegt', passung: 'schwach',
+        warum: 'Eigene Tagungsstätte mit Übernachtung.',
+        merkmale: { eigenversorger: 'Eigene Tagungsstätte mit Übernachtung' } },
+      { firma: 'Steuerkanzlei Aumann und Partner', ort: 'Innenstadt', fahrzeit: 51, mitarbeiter: 14,
+        anlass: 'Kein Anlass belegt', anlassArt: null, quelle: 'Teamseite der Kanzlei', abruf: '18.08.2026',
+        zitat: '', guete: 'fehlt', passung: 'schwach', warum: 'Betrieb zu klein.',
+        merkmale: {} },
+      { firma: 'Ingenieurbüro Kessler', ort: 'Gewerbegebiet', fahrzeit: 37, mitarbeiter: 22,
+        anlass: 'Kein Anlass belegt', anlassArt: null, quelle: 'Impressum und Stellenportal', abruf: '18.08.2026',
+        zitat: '', guete: 'fehlt', passung: 'schwach', warum: 'Betrieb zu klein.',
+        merkmale: {} },
+      { firma: 'Trikot Textil Handels GmbH i. L.', ort: 'Lagerstandort', fahrzeit: 60, mitarbeiter: 180,
+        anlass: 'Kein Anlass belegt', anlassArt: null, quelle: 'Handelsregister', abruf: '18.08.2026',
+        zitat: 'Gesellschaft in Liquidation seit Januar 2026.', guete: 'belegt', passung: 'schwach',
+        warum: 'Eine Ansprache liefe ins Leere.',
+        merkmale: { liquidation: 'Handelsregister, Zusatz „i. L."' } },
+      { firma: 'Fenrich Versicherungsgruppe, Agentur Ostkreis', ort: 'Agentur', fahrzeit: 58, mitarbeiter: 90,
+        anlass: 'Vertriebskonferenz', anlassArt: 'Fachtagung', quelle: 'Handelsregister', abruf: '18.08.2026',
+        zitat: 'Zweigniederlassung der Fenrich Versicherungsgruppe.', guete: 'belegt', passung: 'schwach',
+        warum: 'Dieselbe Gesellschaft wie ein bereits aufgenommener Treffer.',
+        merkmale: { dublette: 'Gleiche Handelsregisternummer wie Fenrich Versicherungsgruppe' } },
+      { firma: 'Papierfabrik Ostmark AG', ort: 'Werksgelände', fahrzeit: 142, mitarbeiter: 500,
+        anlass: 'Betriebsversammlung mit Fest', anlassArt: 'Sommerfest', quelle: 'Karriereseite', abruf: '18.08.2026',
+        zitat: 'Einmal im Jahr feiern wir gemeinsam.', guete: 'belegt', passung: 'schwach',
+        warum: 'Deutlich außerhalb des Einzugsgebiets.',
+        merkmale: {} },
+      { firma: 'Hafenlogistik Emden GmbH', ort: 'Hafen', fahrzeit: 188, mitarbeiter: 340,
+        anlass: 'Jahresauftakt', anlassArt: 'Klausurtagung', quelle: 'Unternehmenswebsite', abruf: '18.08.2026',
+        zitat: 'Zum Jahresauftakt kommt die Leitung zusammen.', guete: 'belegt', passung: 'schwach',
+        warum: 'Deutlich außerhalb des Einzugsgebiets.',
+        merkmale: {} },
+      { firma: 'Kreisverwaltung Mittelmark', ort: 'Kreisstadt', fahrzeit: 49, mitarbeiter: 640,
+        anlass: 'Klausur der Amtsleitungen', anlassArt: 'Klausurtagung', quelle: 'Haushaltsplan des Kreises', abruf: '18.08.2026',
+        zitat: 'Für Übernachtungen ist keine Position vorgesehen.', guete: 'belegt', passung: 'schwach',
+        warum: 'Ohne Übernachtungsbudget trägt das Format nicht.',
+        merkmale: { keinBudget: 'Haushaltsplan weist keine Position für Übernachtungen aus' } },
+      { firma: 'Rheinberger Maschinenbau, Werk Zwei', ort: 'Werk Zwei', fahrzeit: 52, mitarbeiter: 700,
+        anlass: 'Führungskräftetagung', anlassArt: 'Führungskräftetagung', quelle: 'Pressestelle des Konzerns', abruf: '18.08.2026',
+        zitat: 'Veranstaltungen plant der Hauptsitz.', guete: 'belegt', passung: 'schwach',
+        warum: 'Der Standort entscheidet nicht selbst.',
+        merkmale: { zweitstandort: 'Pressestelle verweist auf den Hauptsitz' } },
+      { firma: 'Verein für Regionalgeschichte e.V.', ort: 'Altstadt', fahrzeit: 41, mitarbeiter: 60,
+        anlass: 'Jahreshauptversammlung mit 12 Personen', anlassArt: 'Klausurtagung', quelle: 'Vereinsbericht', abruf: '18.08.2026',
+        zitat: 'Zur Versammlung kamen zwölf Mitglieder.', guete: 'belegt', passung: 'schwach',
+        warum: 'Zu kleine Veranstaltung ohne Übernachtung.',
+        merkmale: { kleinveranstaltung: 'Vereinsbericht, zwölf Teilnehmende ohne Übernachtung' } },
+      { firma: 'Modehaus Kirchner', ort: 'Fußgängerzone', fahrzeit: 46, mitarbeiter: 31,
+        anlass: 'Weihnachtsfeier', anlassArt: 'Weihnachtsfeier', quelle: 'Branchenverzeichnis', abruf: '18.08.2026',
+        zitat: 'Rund 30 Mitarbeitende an zwei Standorten.', guete: 'belegt', passung: 'schwach',
+        warum: 'Betrieb zu klein für die Formate des Hauses.',
+        merkmale: {} }
+    ],
+    kontakte: [
+      {
+        id: 'K-01', firma: 'Rheinberger Maschinenbau AG', person: 'Andrea Kell',
+        anredeBelegt: true, anrede: 'Frau', anredeQuelle: 'Signatur der Anfrage vom 11.02.2026',
+        rolleP: 'Leitung Personalentwicklung', telefon: '+49 211 78420316', durchwahl: true,
+        status: 'dunkelgruen', ebene: 'Interessent', heute: true,
+        fundort: 'Geschäftsbericht, Kapitel Personalentwicklung',
+        historie: [
+          { datum: '11.02.2026', text: 'Erreicht, Termin für die Tagung noch offen' }
+        ],
+        notiz: 'Die Führungskräftetagung steht im eigenen Geschäftsbericht, mit zwei Übernachtungen.',
+        einstieg: 'In Ihrem Geschäftsbericht steht, dass Ihre Führungskräfte einmal im Jahr für zwei Tage zusammenkommen.'
+      },
+      {
+        id: 'K-02', firma: 'Fenrich Versicherungsgruppe', person: 'Sascha Pohl',
+        anredeBelegt: false, anrede: '', anredeQuelle: '',
+        rolleP: 'Leitung Vertriebssteuerung', telefon: '+49 211 66093428', durchwahl: true,
+        status: 'dunkelgruen', ebene: 'Interessent', heute: true,
+        fundort: 'Pressemitteilung vom Vorjahr',
+        historie: [],
+        notiz: 'Die Vertriebskonferenz im Januar ist belegt, das Haus dafür noch nicht vergeben.',
+        einstieg: 'Ich habe gelesen, dass Sie im Januar rund 200 Vertriebspartner zusammenholen.'
+      },
+      {
+        id: 'K-03', firma: 'Adlerhof Lebensmittelwerke GmbH', person: 'Frauke Dahl',
+        anredeBelegt: true, anrede: 'Frau', anredeQuelle: 'Persönliche Vorstellung im Telefonat vom 03.07.2026',
+        rolleP: 'Assistenz der Geschäftsführung', telefon: '+49 211 50117762', durchwahl: true,
+        status: 'dunkelgruen', ebene: 'Interessent', heute: true,
+        fundort: 'Karriereseite, Abschnitt Benefits',
+        historie: [
+          { datum: '03.07.2026', text: 'Erreicht, Angebot für das Sommerfest erbeten' }
+        ],
+        notiz: 'Das Sommerfest ist im Juli zugesagt worden, die Unterlagen sind noch nicht raus.',
+        einstieg: 'Sie hatten mich im Juli um Unterlagen zu Ihrem Sommerfest gebeten, und die bin ich Ihnen noch schuldig.'
+      },
+      {
+        id: 'K-04', firma: 'Nordlab Diagnostik SE', person: 'Nikita Sommer',
+        anredeBelegt: false, anrede: '', anredeQuelle: '',
+        rolleP: 'Referat Unternehmensentwicklung', telefon: '+49 211 34028851', durchwahl: true,
+        status: 'weiss', ebene: 'Interessent', heute: false,
+        fundort: 'Unternehmensblog',
+        historie: [],
+        notiz: 'Dass es eine Klausur gibt, steht im eigenen Blog. Wann sie ist, nicht.',
+        einstieg: 'In Ihrem Blog steht, dass Sie sich für die Jahresplanung bewusst zurückziehen.'
+      },
+      {
+        id: 'K-05', firma: 'Institut für Werkstoffprüfung Nordwest', person: 'Prof. Elke Ramm',
+        anredeBelegt: true, anrede: 'Frau', anredeQuelle: 'Titel und Anrede auf der Institutsseite',
+        rolleP: 'Institutsleitung', telefon: '+49 211 91736405', durchwahl: true,
+        status: 'lila', ebene: 'Kunde', heute: false,
+        fundort: 'Veranstaltungsarchiv des Instituts',
+        historie: [
+          { datum: '14.09.2025', text: 'Fachtagung mit 120 Gästen im Haus, zwei Übernachtungen' }
+        ],
+        notiz: 'Bestandskunde. Die Fachtagung findet jährlich statt.',
+        einstieg: 'Ihre Fachtagung im September war bei uns im Haus, und ich wollte fragen, wie Sie in diesem Jahr planen.'
+      },
+      {
+        id: 'K-06', firma: 'Bauunion Westtor GmbH und Co. KG', person: 'Joshua Kern',
+        anredeBelegt: false, anrede: '', anredeQuelle: '',
+        rolleP: 'Kaufmännische Leitung', telefon: '+49 211 22854190', durchwahl: true,
+        status: 'grau', ebene: 'Interessent', heute: false,
+        fundort: 'Unternehmenswebsite',
+        historie: [
+          { datum: '28.05.2026', text: 'Erreicht, in diesem Jahr kein Format geplant' }
+        ],
+        notiz: 'Kein belegter Anlass. Der Assistent schlägt hier bewusst keinen Anruf vor.',
+        einstieg: null
+      }
+    ],
+    einwaende: [
+      { frage: 'Wir sind mit unserem Haus zufrieden.', antwort: 'Das ist ein gutes Zeichen. Für den Fall, dass Ihr Termin dort einmal nicht frei ist, hinterlege ich Sie als Alternative. Wann liegt Ihre Tagung üblicherweise?' },
+      { frage: 'Wir tagen bei uns im Haus.', antwort: 'Verstehe. Bei Klausuren höre ich oft, dass genau das der Nachteil ist, weil jeder zwischendurch an den Schreibtisch geht. Wäre das für Sie ein Thema?' },
+      { frage: 'Schicken Sie einfach Unterlagen.', antwort: 'Sehr gern. Damit sie passen, brauche ich zwei Angaben, die Personenzahl und ob mit Übernachtung geplant wird.' },
+      { frage: 'Dafür bin ich nicht zuständig.', antwort: 'Danke für die Offenheit. Wer plant bei Ihnen die Tagungen, und darf ich mich auf Sie berufen?' }
+    ],
+    nuggets: [
+      { art: 'Erfolgreiche Formulierung', assistent: 'termin', text: 'Die Frage nach der Übernachtung gleich im ersten Satz trennt die passenden Anfragen von den Tagesveranstaltungen, bevor Arbeit entsteht.', herkunft: 'aus 28 Gesprächen' },
+      { art: 'Gesprächsposition', assistent: 'termin', text: 'Bei Tagungen entscheidet die Personalentwicklung, nicht der Einkauf. Der Einkauf kommt erst beim Preis dazu.', herkunft: 'aus 37 Gesprächen' },
+      { art: 'Saisonmuster', assistent: 'ziel', text: 'Klausurtagungen für das Folgejahr werden im September und Oktober vergeben, Sommerfeste bereits im Februar.', herkunft: 'aus zwei Jahren Buchungsdaten' },
+      { art: 'Branchen-Benchmarking', assistent: 'ziel', text: 'Versicherungen buchen die größten Gruppen, Institute die längsten Aufenthalte.', herkunft: 'aus 74 abgeschlossenen Veranstaltungen' }
+    ]
+  },
+
+  /* ============================================================ 3 */
+  gruppe: {
+    schluessel: 'gruppe',
+    reiter: 'Gastro-Gruppe',
+    haus: 'Kollektiv Nordstern',
+    zusatz: 'Neun Betriebe, davon zwei Cateringmarken',
+    ort: 'Rhein-Main',
+    nutzer: 'Timo Reuter',
+    rolle: 'Vertrieb der Gruppe',
+    regeln: {
+      radiusMin: 45, mindestGroesse: 50, obergrenzeAn: false, obergrenze: 2000,
+      anlassPflicht: false,
+      anlaesse: ['Kundenempfang', 'Firmenfeier', 'Messebegleitung', 'Richtfest'],
+      schalter: { liquidation: true, dublette: true, zweitstandort: true, tagung: true, eigenversorger: true, kleinveranstaltung: true }
+    },
+    schalter: [
+      { schluessel: 'eigenversorger', regel: 'Firmen mit eigener Kantine samt Veranstaltungsservice', grund: 'Eigene Kantine mit Veranstaltungsservice' },
+      { schluessel: 'kleinveranstaltung', regel: 'Anfragen unter 30 Personen, dafür ist die Gruppe nicht aufgestellt', grund: 'Zu kleine Veranstaltung' },
+      { schluessel: 'tagung', regel: 'Reine Tagungen ohne gastronomischen Anteil', grund: 'Reines Tagungsgeschäft' },
+      { schluessel: 'liquidation', regel: 'Firmen in Liquidation oder ohne aktiven Handelsregistereintrag', grund: 'In Liquidation' },
+      { schluessel: 'dublette', regel: 'Filialen und Zweitmarken derselben Gesellschaft, nur einmal ansprechen', grund: 'Dublette' },
+      { schluessel: 'zweitstandort', regel: 'Zweitstandorte, deren Entscheidung nachweislich in der Zentrale liegt', grund: 'Entscheidung liegt in der Zentrale' }
+    ],
+    schluss: 'Ich rufe an, weil wir für genau solche Anlässe neun Häuser und zwei Cateringmarken haben, je nachdem, ob bei Ihnen oder bei uns gefeiert wird.',
+    lauf: { datum: '18.08.2026, 06:40 Uhr', dauer: '4 Minuten' },
+    firmen: [
+      { firma: 'Taunus Software Group SE', ort: 'Eschborn', fahrzeit: 14, mitarbeiter: 3100,
+        anlass: 'Hausmesse mit Kundenempfang im Oktober', anlassArt: 'Messebegleitung',
+        quelle: 'Veranstaltungsseite des Unternehmens', abruf: '18.08.2026',
+        zitat: 'Über 600 Gäste besuchten unsere Hausmesse.', guete: 'belegt',
+        passung: 'stark', warum: 'Große Gästezahl und wiederkehrend, dafür sind die beiden Cateringmarken gebaut.',
+        merkmale: {} },
+      { firma: 'Mainhattan Capital Advisors AG', ort: 'Innenstadt', fahrzeit: 8, mitarbeiter: 190,
+        anlass: 'Quartalsempfang für Mandanten', anlassArt: 'Kundenempfang',
+        quelle: 'Pressebereich der Website', abruf: '18.08.2026',
+        zitat: 'Zum Quartalsempfang begrüßten wir unsere Mandanten.', guete: 'belegt',
+        passung: 'stark', warum: 'Viermal im Jahr derselbe Anlass, das ist kein Einzelauftrag, sondern ein Rahmen.',
+        merkmale: {} },
+      { firma: 'Rhein-Main Klinikverbund gGmbH', ort: 'Offenbach', fahrzeit: 22, mitarbeiter: 2700,
+        anlass: 'Jahresempfang und Ehrungen', anlassArt: 'Kundenempfang',
+        quelle: 'Jahresbericht des Verbunds', abruf: '18.08.2026',
+        zitat: 'Beim Jahresempfang wurden 40 Jubilare geehrt.', guete: 'belegt',
+        passung: 'gut', warum: 'Großveranstaltung mit festem Termin, gut planbar.',
+        merkmale: {} },
+      { firma: 'Wetterau Logistik GmbH', ort: 'Friedberg', fahrzeit: 31, mitarbeiter: 540,
+        anlass: 'Betriebsfest, Turnus nicht belegt', anlassArt: 'Firmenfeier',
+        quelle: 'Karriereseite', abruf: '18.08.2026',
+        zitat: 'Wir feiern zusammen, wenn das Jahr gut gelaufen ist.', guete: 'abgeleitet',
+        passung: 'mittel', warum: 'Dass gefeiert wird, ist belegt. Wie oft und wann, ist es nicht.',
+        merkmale: {} },
+      { firma: 'Odenwald Präzisionsteile KG', ort: 'Darmstadt', fahrzeit: 38, mitarbeiter: 380,
+        anlass: 'Kein Anlass belegt', anlassArt: null,
+        quelle: 'Unternehmenswebsite', abruf: '18.08.2026',
+        zitat: '', guete: 'fehlt',
+        passung: 'mittel', warum: 'Größe und Entfernung passen, ein Anlass ist nicht belegt.',
+        merkmale: {} },
+      { firma: 'Hessische Wohnbau AG', ort: 'Wiesbaden', fahrzeit: 41, mitarbeiter: 760,
+        anlass: 'Richtfeste und Schlüsselübergaben', anlassArt: 'Richtfest',
+        quelle: 'Projektarchiv und Regionalpresse', abruf: '18.08.2026',
+        zitat: 'Zur Schlüsselübergabe kamen rund 150 Gäste.', guete: 'belegt',
+        passung: 'gut', warum: 'Mehrere Anlässe pro Jahr, jeder mit gastronomischem Anteil.',
+        merkmale: {} },
+      { firma: 'Deutsche Werkbank AG', ort: 'Rüsselsheim', fahrzeit: 20, mitarbeiter: 900,
+        anlass: 'Betriebsfeiern', anlassArt: null, quelle: 'Karriereseite', abruf: '18.08.2026',
+        zitat: 'Unser Betriebsrestaurant richtet auch Feiern aus.', guete: 'belegt', passung: 'schwach',
+        warum: 'Das Haus versorgt sich selbst.',
+        merkmale: { eigenversorger: 'Karriereseite, „unser Betriebsrestaurant richtet auch Feiern aus"' } },
+      { firma: 'Chemiepark Höchstadt Betriebs GmbH', ort: 'Höchstadt', fahrzeit: 33, mitarbeiter: 1400,
+        anlass: 'Standortfeste', anlassArt: null, quelle: 'Standortbroschüre', abruf: '18.08.2026',
+        zitat: 'Die Gastronomie am Standort betreiben wir selbst.', guete: 'belegt', passung: 'schwach',
+        warum: 'Eigener Gastronomiebetrieb am Standort.',
+        merkmale: { eigenversorger: 'Eigener Gastronomiebetrieb am Standort' } },
+      { firma: 'Kanzlei Wehrle und Kollegen', ort: 'Westend', fahrzeit: 12, mitarbeiter: 18,
+        anlass: 'Kein Anlass belegt', anlassArt: null, quelle: 'Teamseite der Kanzlei', abruf: '18.08.2026',
+        zitat: '', guete: 'fehlt', passung: 'schwach', warum: 'Betrieb zu klein.',
+        merkmale: {} },
+      { firma: 'Agentur Blaupause GmbH', ort: 'Bockenheim', fahrzeit: 16, mitarbeiter: 26,
+        anlass: 'Sommerfest', anlassArt: 'Firmenfeier', quelle: 'Impressum und Stellenportal', abruf: '18.08.2026',
+        zitat: 'Ein Team aus 26 Köpfen.', guete: 'belegt', passung: 'schwach', warum: 'Betrieb zu klein.',
+        merkmale: {} },
+      { firma: 'Vertrieb Süd Handels GmbH i. L.', ort: 'Neu-Isenburg', fahrzeit: 25, mitarbeiter: 120,
+        anlass: 'Kein Anlass belegt', anlassArt: null, quelle: 'Handelsregister', abruf: '18.08.2026',
+        zitat: 'Gesellschaft in Liquidation seit November 2025.', guete: 'belegt', passung: 'schwach',
+        warum: 'Eine Ansprache liefe ins Leere.',
+        merkmale: { liquidation: 'Handelsregister, Zusatz „i. L."' } },
+      { firma: 'Taunus Software Group, Standort Leipzig', ort: 'Leipzig', fahrzeit: 212, mitarbeiter: 300,
+        anlass: 'Hausmesse', anlassArt: 'Messebegleitung', quelle: 'Handelsregister', abruf: '18.08.2026',
+        zitat: 'Zweigniederlassung der Taunus Software Group SE.', guete: 'belegt', passung: 'schwach',
+        warum: 'Dieselbe Gesellschaft wie ein bereits aufgenommener Treffer.',
+        merkmale: { dublette: 'Gleiche Handelsregisternummer wie Taunus Software Group SE' } },
+      { firma: 'Nordsee Fischhandel eG', ort: 'Bremerhaven', fahrzeit: 167, mitarbeiter: 200,
+        anlass: 'Genossenschaftsfeier', anlassArt: 'Firmenfeier', quelle: 'Genossenschaftsbericht', abruf: '18.08.2026',
+        zitat: 'Zur Feier kamen rund 180 Mitglieder.', guete: 'belegt', passung: 'schwach',
+        warum: 'Deutlich außerhalb des Einzugsgebiets.',
+        merkmale: {} },
+      { firma: 'Alpenland Touristik AG', ort: 'Garmisch', fahrzeit: 294, mitarbeiter: 400,
+        anlass: 'Partnerempfang', anlassArt: 'Kundenempfang', quelle: 'Unternehmenswebsite', abruf: '18.08.2026',
+        zitat: 'Unser Partnerempfang im Herbst.', guete: 'belegt', passung: 'schwach',
+        warum: 'Deutlich außerhalb des Einzugsgebiets.',
+        merkmale: {} },
+      { firma: 'Seminarhaus Spessart GmbH', ort: 'Spessart', fahrzeit: 39, mitarbeiter: 60,
+        anlass: 'Seminarbetrieb', anlassArt: null, quelle: 'Leistungsübersicht der Website', abruf: '18.08.2026',
+        zitat: 'Seminare, Schulungen und Workshops.', guete: 'belegt', passung: 'schwach',
+        warum: 'Ohne gastronomischen Anteil trägt das Geschäft nicht.',
+        merkmale: { tagung: 'Leistungsübersicht nennt ausschließlich Seminarformate' } },
+      { firma: 'Rhein-Main Klinikverbund, Haus Hanau', ort: 'Hanau', fahrzeit: 28, mitarbeiter: 800,
+        anlass: 'Jahresempfang', anlassArt: 'Kundenempfang', quelle: 'Pressestelle des Verbunds', abruf: '18.08.2026',
+        zitat: 'Veranstaltungen plant die Verbundzentrale.', guete: 'belegt', passung: 'schwach',
+        warum: 'Der Standort entscheidet nicht selbst.',
+        merkmale: { zweitstandort: 'Pressestelle verweist auf die Verbundzentrale' } },
+      { firma: 'Förderverein Stadtmuseum e.V.', ort: 'Altstadt', fahrzeit: 15, mitarbeiter: 60,
+        anlass: 'Jahresempfang mit 24 Personen', anlassArt: 'Kundenempfang', quelle: 'Vereinsbericht des Vorjahres', abruf: '18.08.2026',
+        zitat: 'Zum Empfang kamen 24 Gäste.', guete: 'belegt', passung: 'schwach',
+        warum: 'Zu kleine Veranstaltung für die Gruppe.',
+        merkmale: { kleinveranstaltung: 'Vereinsbericht, 24 Gäste beim letzten Empfang' } },
+      { firma: 'Autohaus Lindenthal e.K.', ort: 'Bad Homburg', fahrzeit: 18, mitarbeiter: 34,
+        anlass: 'Modellpremiere', anlassArt: 'Kundenempfang', quelle: 'Branchenverzeichnis', abruf: '18.08.2026',
+        zitat: 'Rund 34 Mitarbeitende am Standort.', guete: 'belegt', passung: 'schwach',
+        warum: 'Betrieb zu klein für die Formate der Gruppe.',
+        merkmale: {} }
+    ],
+    kontakte: [
+      {
+        id: 'K-01', firma: 'Taunus Software Group SE', person: 'Beate Ruhland',
+        anredeBelegt: true, anrede: 'Frau', anredeQuelle: 'Signatur der Anfrage vom 07.04.2026',
+        rolleP: 'Leitung Events und Messen', telefon: '+49 69 71204583', durchwahl: true,
+        status: 'dunkelgruen', ebene: 'Interessent', heute: true,
+        fundort: 'Veranstaltungsseite des Unternehmens',
+        historie: [
+          { datum: '07.04.2026', text: 'Erreicht, Ausschreibung für die Hausmesse angekündigt' }
+        ],
+        notiz: 'Die Ausschreibung für die Hausmesse war für dieses Quartal angekündigt.',
+        einstieg: 'Sie hatten im April erwähnt, dass die Ausschreibung für Ihre Hausmesse in diesem Quartal kommt.'
+      },
+      {
+        id: 'K-02', firma: 'Mainhattan Capital Advisors AG', person: 'Alexis Winter',
+        anredeBelegt: false, anrede: '', anredeQuelle: '',
+        rolleP: 'Office Management', telefon: '+49 69 50338271', durchwahl: true,
+        status: 'dunkelgruen', ebene: 'Interessent', heute: true,
+        fundort: 'Pressebereich der Website',
+        historie: [],
+        notiz: 'Vier Empfänge im Jahr, das ist ein Rahmen und kein Einzelauftrag.',
+        einstieg: 'Ich habe gesehen, dass Sie viermal im Jahr zum Quartalsempfang einladen.'
+      },
+      {
+        id: 'K-03', firma: 'Rhein-Main Klinikverbund gGmbH', person: 'Dr. Ulrike Bense',
+        anredeBelegt: true, anrede: 'Frau', anredeQuelle: 'Anrede im Impressum des Jahresberichts',
+        rolleP: 'Leitung Kommunikation', telefon: '+49 69 84116690', durchwahl: true,
+        status: 'dunkelgruen', ebene: 'Interessent', heute: true,
+        fundort: 'Jahresbericht des Verbunds',
+        historie: [
+          { datum: '19.01.2026', text: 'Erreicht, Wiedervorlage nach der Sommerpause erbeten' }
+        ],
+        notiz: 'Sie hat im Januar selbst um eine Wiedervorlage nach der Sommerpause gebeten.',
+        einstieg: 'Sie hatten mich im Januar gebeten, mich nach der Sommerpause wieder zu melden.'
+      },
+      {
+        id: 'K-04', firma: 'Hessische Wohnbau AG', person: 'Kim Vogler',
+        anredeBelegt: false, anrede: '', anredeQuelle: '',
+        rolleP: 'Unternehmenskommunikation', telefon: '+49 611 39027714', durchwahl: true,
+        status: 'weiss', ebene: 'Interessent', heute: false,
+        fundort: 'Projektarchiv und Regionalpresse',
+        historie: [],
+        notiz: 'Mehrere Richtfeste im Jahr, jedes mit Bewirtung.',
+        einstieg: 'Ich habe gelesen, dass zu Ihrer letzten Schlüsselübergabe rund 150 Gäste gekommen sind.'
+      },
+      {
+        id: 'K-05', firma: 'Wetterau Logistik GmbH', person: 'Hendrik Sauer',
+        anredeBelegt: true, anrede: 'Herr', anredeQuelle: 'Signatur der Anfrage vom 22.05.2026',
+        rolleP: 'Personalleitung', telefon: '+49 6031 44820159', durchwahl: true,
+        status: 'lila', ebene: 'Kunde', heute: false,
+        fundort: 'Karriereseite',
+        historie: [
+          { datum: '22.05.2026', text: 'Betriebsfest für 320 Personen ausgerichtet, Abrechnung abgeschlossen' }
+        ],
+        notiz: 'Bestandskunde. Ob jährlich gefeiert wird, ist nicht belegt und genau die Frage.',
+        einstieg: 'Ihr Betriebsfest im Mai haben wir ausgerichtet, und ich wollte fragen, ob das jedes Jahr ansteht.'
+      },
+      {
+        id: 'K-06', firma: 'Odenwald Präzisionsteile KG', person: 'Marion Steeg',
+        anredeBelegt: true, anrede: 'Frau', anredeQuelle: 'Persönliche Vorstellung im Telefonat vom 09.06.2026',
+        rolleP: 'Assistenz der Geschäftsführung', telefon: '+49 6151 77390264', durchwahl: true,
+        status: 'grau', ebene: 'Interessent', heute: false,
+        fundort: 'Unternehmenswebsite',
+        historie: [
+          { datum: '09.06.2026', text: 'Erreicht, derzeit kein Format geplant' }
+        ],
+        notiz: 'Kein belegter Anlass. Der Assistent schlägt hier bewusst keinen Anruf vor.',
+        einstieg: null
+      }
+    ],
+    einwaende: [
+      { frage: 'Wir machen das intern.', antwort: 'Das höre ich oft. Die Frage, die dabei meist bleibt, ist wer am Abend selbst nichts vom Fest hat. Wie lösen Sie das bisher?' },
+      { frage: 'Schicken Sie einfach Unterlagen.', antwort: 'Mache ich gern. Damit sie passen, brauche ich zwei Angaben, die Personenzahl und ob es im Unternehmen oder bei uns stattfinden soll.' },
+      { frage: 'Wir haben einen Rahmenvertrag.', antwort: 'Gut zu wissen. Bis wann läuft er, und wer entscheidet über die Verlängerung? Dann melde ich mich rechtzeitig statt zur Unzeit.' },
+      { frage: 'Dafür bin ich nicht zuständig.', antwort: 'Danke für die Offenheit. Wer entscheidet bei Ihnen über Veranstaltungen dieser Größe, und darf ich mich auf Sie berufen?' }
+    ],
+    nuggets: [
+      { art: 'Erfolgreiche Formulierung', assistent: 'termin', text: 'Die Frage, ob im Unternehmen oder bei uns gefeiert wird, öffnet das Gespräch für beide Cateringmarken statt nur für die Häuser.', herkunft: 'aus 52 Gesprächen' },
+      { art: 'Gesprächsposition', assistent: 'termin', text: 'Bei Gruppen entscheidet die Kommunikation über Empfänge und die Personalabteilung über Betriebsfeste. Das sind zwei verschiedene Gespräche.', herkunft: 'aus 63 Gesprächen' },
+      { art: 'Saisonmuster', assistent: 'ziel', text: 'Kundenempfänge werden ein Quartal vorher vergeben, Betriebsfeste ein halbes Jahr.', herkunft: 'aus zwei Jahren Buchungsdaten' },
+      { art: 'Branchen-Benchmarking', assistent: 'ziel', text: 'Technologieunternehmen buchen die größten Gästezahlen, Beratungen den höchsten Betrag je Gast.', herkunft: 'aus 118 abgeschlossenen Veranstaltungen' }
+    ]
+  }
+};
+
+const STATUS_TEXT = {
+  weiss:       { text: 'Noch nicht kontaktiert', klasse: 's-weiss' },
+  dunkelgruen: { text: 'Zuerst bearbeiten',      klasse: 's-dunkelgruen' },
+  hellgruen:   { text: 'Zuletzt bearbeitet',     klasse: 's-hellgruen' },
+  grau:        { text: 'Nicht relevant, schon kontaktiert', klasse: 's-grau' },
+  lila:        { text: 'Bestandskunde',          klasse: 's-lila' }
+};
+
+/* Kopie der Telefon-Einstellungen eines Betriebs. Jeder Einwand traegt
+   sein eigenes `aktiv`, damit er abgeschaltet werden kann, ohne aus der
+   Liste zu verschwinden. Ein geloeschter Einwand waere nicht
+   wiederherstellbar, ein abgeschalteter ist es mit einem Klick. */
+function telefonKopie(schluessel) {
+  const o = BETRIEBE[schluessel];
+  return {
+    nutzer: o.nutzer,
+    rolle: o.rolle,
+    schluss: o.schluss,
+    einwaende: o.einwaende.map(x => ({ frage: x.frage, antwort: x.antwort, aktiv: true, eigen: false }))
+  };
+}
+
+/* Das Kuerzel im Seitenkopf wird aus dem Namen GERECHNET, nicht
+   hinterlegt. Sonst stuende nach dem Umbenennen des Anrufers weiter das
+   alte Kuerzel daneben, also dieselbe Angabe an zwei Stellen mit zwei
+   verschiedenen Wahrheiten. */
+function kuerzel(name) {
+  const teile = String(name || '').trim().split(/\s+/).filter(Boolean);
+  if (!teile.length) return '··';
+  if (teile.length === 1) return teile[0].slice(0, 2).toUpperCase();
+  return (teile[0][0] + teile[teile.length - 1][0]).toUpperCase();
+}
+
+/* ------------------------------------------------------------------
+   Zustand. Bewusst klein gehalten, der Prototyp speichert nichts.
+   ------------------------------------------------------------------ */
+const zustand = {
+  betrieb: 'stern',
+  ansicht: 'uebersicht',
+  reiterLauf: 'aufgenommen',
+  kontaktId: null,
+  anrufSchritt: 0,
+  anrufErgebnis: '',
+  /* Laufzeit-Aenderungen je Betrieb, damit ein Wechsel nichts verliert. */
+  aenderungen: { stern: {}, tagung: {}, gruppe: {} },
+  ueberstimmt: { stern: [], tagung: [], gruppe: [] },
+  verworfeneNuggets: { stern: [], tagung: [], gruppe: [] },
+  /* Die EINSTELLBAREN Regeln, je Betrieb eine eigene Kopie der
+     hinterlegten. Die Vorlage in BETRIEBE bleibt unangetastet, sonst
+     gaebe es kein „auf Standard zuruecksetzen" mehr. */
+  regeln: {
+    stern: JSON.parse(JSON.stringify(BETRIEBE.stern.regeln)),
+    tagung: JSON.parse(JSON.stringify(BETRIEBE.tagung.regeln)),
+    gruppe: JSON.parse(JSON.stringify(BETRIEBE.gruppe.regeln))
+  },
+  /* Dasselbe fuer den Termin-Assistenten. Anrufer, Schlusssatz und die
+     Einwaende sind einstellbar, deshalb sind sie ab hier Zustand und
+     werden nicht mehr direkt aus BETRIEBE gelesen. */
+  telefon: {
+    stern: telefonKopie('stern'),
+    tagung: telefonKopie('tagung'),
+    gruppe: telefonKopie('gruppe')
+  },
+  /* Die halbfertige Eingabe eines neuen Einwands. Sie liegt im Zustand,
+     damit ein Neuzeichnen sie nicht verschluckt, und JE BETRIEB, wie
+     jeder andere Laufzeitwert hier. Lag sie global, stand ein in einem
+     Haus getippter Entwurf beim naechsten Haus im Feld und wurde dort
+     als dessen Einwand gespeichert. */
+  neuEinwand: {
+    stern: { frage: '', antwort: '' },
+    tagung: { frage: '', antwort: '' },
+    gruppe: { frage: '', antwort: '' }
+  },
+  meldung: null,
+  /* `gut` ist eine Erledigung, `stop` eine Ablehnung. Ohne diese
+     Unterscheidung stuende „Erledigt" in Gruen ueber einem Satz, der
+     gerade erklaert, dass nichts uebernommen wurde. */
+  meldungArt: 'gut'
+};
+
+function b() { return BETRIEBE[zustand.betrieb]; }
+function regeln() { return zustand.regeln[zustand.betrieb]; }
+function tel() { return zustand.telefon[zustand.betrieb]; }
+function neuEinwand() { return zustand.neuEinwand[zustand.betrieb]; }
+
+/* Nur die aktiven Einwaende, in ihrer Reihenfolge. Eine einzige Stelle,
+   damit Anrufansicht und Zaehlung nie auseinanderlaufen koennen. */
+function aktiveEinwaende() { return tel().einwaende.filter(x => x.aktiv); }
+
+/* Der Lauf, wie er mit den HINTERLEGTEN Regeln ausgesehen haette.
+   Nur zum Vergleich, er veraendert nichts. */
+function standardLauf() {
+  const eigene = zustand.regeln[zustand.betrieb];
+  zustand.regeln[zustand.betrieb] = b().regeln;
+  const x = lauf();
+  zustand.regeln[zustand.betrieb] = eigene;
+  return x;
+}
+
+/* Ein Kontakt mit allen Laufzeit-Aenderungen darueber gelegt. */
+function kontakte() {
+  const aend = zustand.aenderungen[zustand.betrieb];
+  return b().kontakte.map(k => Object.assign({}, k, aend[k.id] || {}));
+}
+function kontakt(id) { return kontakte().find(k => k.id === id); }
+
+function aendere(id, feld, wert) {
+  const aend = zustand.aenderungen[zustand.betrieb];
+  if (!aend[id]) aend[id] = {};
+  aend[id][feld] = wert;
+}
+
+/* ------------------------------------------------------------------
+   Textbausteine. Hier entscheidet sich, ob der Prototyp ehrlich ist.
+   ------------------------------------------------------------------ */
+
+/* Die Anrede wird NIE aus dem Vornamen geschlossen. Ist sie nicht
+   belegt, wird ohne Anrede formuliert. Wer sie aus dem letzten Buchstaben
+   des Vornamens ableitet, spricht Luca, Sascha, Nikita, Joshua, Alexis
+   und Kim verlaesslich falsch an. */
+function anredeZeile(k) {
+  if (k.anredeBelegt && k.anrede) return 'Guten Tag, ' + k.anrede + ' ' + nachname(k.person) + ',';
+  return 'Guten Tag,';
+}
+function nachname(voll) {
+  const teile = voll.split(' ');
+  return teile[teile.length - 1];
+}
+
+/* Der gesprochene Einstieg entsteht NUR aus `einstieg`, nie aus `notiz`.
+   Die Notiz ist die interne Begruendung und gehoert dem Anrufer, nicht
+   dem Angerufenen. Lagen beide im selben Feld, liest der Assistent dem
+   Kunden Saetze wie „Bestandskunde." und „Kein belegter Anlass." vor. */
+function opener(k) {
+  const o = b();
+  if (!k.einstieg) return null;
+  return anredeZeile(k) + '\n\n'
+    + 'mein Name ist ' + tel().nutzer + ' vom ' + o.haus + '. '
+    + k.einstieg + '\n\n'
+    + tel().schluss + ' '
+    + 'Passt es Ihnen kurz, oder rufe ich zu einem besseren Zeitpunkt noch einmal an?';
+}
+
+/* Statt eines erfundenen Einstiegs sagt der Assistent, was ihm fehlt. */
+function openerBlock(k) {
+  const t = opener(k);
+  if (t) return '<div class="opener">' + e(t) + '</div>';
+  return '<div class="kasten rot"><div class="kasten-titel">Kein Einstieg vorgeschlagen</div>'
+    + '<div class="kasten-text">Für diesen Kontakt ist kein Veranstaltungsanlass belegt. '
+    + 'Der Assistent erfindet keinen, sondern legt den Kontakt zurück. '
+    + 'Wer trotzdem anrufen will, tut das ohne vorbereiteten Einstieg.</div></div>';
+}
+
+/* ------------------------------------------------------------------
+   Bausteine der Oberflaeche
+   ------------------------------------------------------------------ */
+const e = (s) => String(s === undefined || s === null ? '' : s)
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;');
+
+function statusPille(s) {
+  const st = STATUS_TEXT[s];
+  return '<span class="status"><span class="status-punkt ' + st.klasse + '"></span>' + e(st.text) + '</span>';
+}
+
+function guetePille(g) {
+  if (g === 'belegt') return '<span class="pille p-gruen">belegt</span>';
+  if (g === 'abgeleitet') return '<span class="pille p-gold">abgeleitet</span>';
+  return '<span class="pille p-rot">fehlt</span>';
+}
+
+function ebenePille(k) {
+  return k.ebene === 'Kunde'
+    ? '<span class="pille p-lila">Kunde</span>'
+    : '<span class="pille p-grau">Interessent</span>';
+}
+
+/* ------------------------------------------------------------------
+   Ansichten
+   ------------------------------------------------------------------ */
+
+/* ------------------------------------------------------------------
+   Die Selektion wird GERECHNET, nicht hinterlegt.
+   Jede Firma traegt Merkmale, jede Regel ist einstellbar, und wer eine
+   Regel aendert, sieht die Liste sofort anders. Das ist der ganze Zweck
+   des Bildschirms „Assistenten anlernen". Eine Einstellung ohne Wirkung
+   waere schlimmer als gar keine, weil sie Wirkung verspricht.
+   ------------------------------------------------------------------ */
+
+/* Reihenfolge der Pruefung. Sie bestimmt, WELCHER Grund angezeigt wird,
+   wenn eine Firma mehrere Regeln verletzt. Harte Ausschluesse zuerst,
+   danach die Zahlen, zuletzt die inhaltlichen Fragen. */
+const PRUEF_REIHE = ['liquidation', 'dublette', 'zweitstandort', 'tagung',
+                     'eigenversorger', 'keinBudget', 'kleinveranstaltung'];
+
+function pruefe(f, o, r) {
+  for (const k of PRUEF_REIHE) {
+    if (r.schalter[k] && f.merkmale[k]) {
+      const def = o.schalter.find(x => x.schluessel === k);
+      return { grund: def.grund, kriterium: def.regel, beleg: f.merkmale[k] };
+    }
+  }
+  if (f.fahrzeit > r.radiusMin) {
+    return { grund: f.fahrzeit + ' Minuten Fahrzeit',
+             kriterium: 'Einzugsgebiet ' + r.radiusMin + ' Minuten',
+             beleg: 'Routenberechnung ab dem Haus, Ziel ' + f.ort };
+  }
+  if (f.mitarbeiter < r.mindestGroesse) {
+    return { grund: f.mitarbeiter + ' Mitarbeitende',
+             kriterium: 'Mindestgröße ' + r.mindestGroesse + ' Mitarbeitende',
+             beleg: f.quelle + ', abgerufen ' + f.abruf };
+  }
+  if (r.obergrenzeAn && f.mitarbeiter > r.obergrenze) {
+    return { grund: f.mitarbeiter + ' Mitarbeitende',
+             kriterium: 'Obergrenze ' + r.obergrenze + ' Mitarbeitende',
+             beleg: f.quelle + ', abgerufen ' + f.abruf };
+  }
+  if (r.anlassPflicht && f.guete === 'fehlt') {
+    return { grund: 'Kein Veranstaltungsanlass belegt',
+             kriterium: 'Belegter Anlass ist Pflicht',
+             beleg: 'Keine Quelle nennt einen Anlass' };
+  }
+  if (f.anlassArt && r.anlaesse.indexOf(f.anlassArt) === -1) {
+    return { grund: 'Anlass „' + f.anlassArt + '" steht nicht in der Liste',
+             kriterium: 'Passende Anlässe',
+             beleg: f.quelle + ', abgerufen ' + f.abruf };
+  }
+  return null;
+}
+
+/* Der Lauf. Einmal gerechnet, von allen Ansichten benutzt, damit zwei
+   Bildschirme nie verschiedene Zahlen zeigen koennen. */
+function lauf() {
+  const o = b(), r = regeln();
+  const ueber = zustand.ueberstimmt[zustand.betrieb];
+  const auf = [], ver = [];
+  o.firmen.forEach(f => {
+    if (ueber.indexOf(f.firma) >= 0) { auf.push({ f: f, vonHand: true }); return; }
+    const x = pruefe(f, o, r);
+    if (x) ver.push(Object.assign({ f: f }, x));
+    else auf.push({ f: f, vonHand: false });
+  });
+  return { auf: auf, ver: ver, geprueft: o.firmen.length };
+}
+
+function ansichtUebersicht() {
+  const o = b();
+  const ks = kontakte();
+  const heute = ks.filter(k => k.heute);
+  const erledigt = heute.filter(k => k.erledigt).length;
+  const interessenten = ks.filter(k => k.ebene === 'Interessent').length;
+  const kunden = ks.filter(k => k.ebene === 'Kunde').length;
+  const L = lauf();
+  const vonHand = L.auf.filter(x => x.vonHand).length;
+
+  return `
+  <section class="stapel">
+    <div class="gitter g4">
+      <div class="kennzahl">
+        <div class="kennzahl-label">Heute anrufen</div>
+        <div class="kennzahl-wert zahl">${erledigt} von ${heute.length}</div>
+        <div class="kennzahl-note">Vom Termin-Assistent vorgemerkt</div>
+      </div>
+      <div class="kennzahl">
+        <div class="kennzahl-label">Kontakte gesamt</div>
+        <div class="kennzahl-wert zahl">${ks.length}</div>
+        <div class="kennzahl-note">${interessenten} ${interessenten === 1 ? 'Interessent' : 'Interessenten'}, ${kunden} ${kunden === 1 ? 'Kunde' : 'Kunden'}</div>
+      </div>
+      <div class="kennzahl">
+        <div class="kennzahl-label">Letzter Lauf</div>
+        <div class="kennzahl-wert zahl">${L.auf.length} von ${L.geprueft}</div>
+        <div class="kennzahl-note">${L.ver.length} verworfen, alle einsehbar</div>
+      </div>
+      <div class="kennzahl">
+        <div class="kennzahl-label">Dauer des Laufs</div>
+        <div class="kennzahl-wert zahl">${e(o.lauf.dauer)}</div>
+        <div class="kennzahl-note">Von Hand rund 18 Minuten je Firma</div>
+      </div>
+    </div>
+
+    <div class="gitter g-haupt">
+      <div class="karte">
+        <div class="karte-kopf">
+          <h2 class="karte-titel">Heute vorgemerkt</h2>
+          <span class="pille p-gold">Termin-Assistent</span>
+          <button class="knopf k-gold k-klein" style="margin-left:auto" data-geh="heute">Anrufliste öffnen</button>
+        </div>
+        ${heute.map(k => `
+          <button class="liste-zeile" data-kontakt="${e(k.id)}">
+            <span class="kanal">${k.erledigt ? '✓' : '☎'}</span>
+            <span class="liste-haupt">
+              <span class="liste-titel">${e(k.person)}, ${e(k.firma)}</span>
+              <span class="liste-sub">${e(k.rolleP)} · ${e(k.notiz)}</span>
+            </span>
+            <span class="liste-rechts">${statusPille(k.status)}${ebenePille(k)}</span>
+          </button>`).join('')}
+      </div>
+
+      <div class="stapel">
+        <div class="karte">
+          <div class="karte-kopf"><h2 class="karte-titel">Was die Assistenten nicht wissen</h2></div>
+          <div class="karte-leib stapel">
+            <div class="kasten rot">
+              <div class="kasten-titel">Ohne belegte Anrede</div>
+              <div class="kasten-text">
+                Bei ${ks.filter(k => !k.anredeBelegt).length} von ${ks.length} Kontakten ist die Anrede nicht belegt.
+                Der Assistent schreibt dort „Guten Tag," ohne Namen, statt sie aus dem Vornamen zu raten.
+              </div>
+            </div>
+            <div class="kasten gold">
+              <div class="kasten-titel">Ohne belegten Anlass</div>
+              <div class="kasten-text">
+                ${o.firmen.filter(f => f.guete === 'fehlt').length} Firmen im Bestand haben keinen belegten
+                Veranstaltungsanlass. Sie bleiben sichtbar markiert, statt still zu verschwinden.
+              </div>
+            </div>
+            ${vonHand ? `
+            <div class="kasten grau">
+              <div class="kasten-titel">Von Hand aufgenommen</div>
+              <div class="kasten-text">
+                ${vonHand} ${vonHand === 1 ? 'Firma trägt' : 'Firmen tragen'} keinen Beleg, ${vonHand === 1 ? 'sie wurde' : 'sie wurden'}
+                gegen die Regel aufgenommen. Der Grund bleibt nachlesbar.
+              </div>
+            </div>` : ''}
+            <div class="kasten grau">
+              <div class="kasten-titel">Nicht angebunden</div>
+              <div class="kasten-text">
+                Kassensystem, Tischreservierung und Postfach sind in diesem Prototyp nicht verbunden.
+                Der Bestandsabgleich zeigt deshalb Beispieldaten.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="karte">
+          <div class="karte-kopf"><h2 class="karte-titel">Das Haus</h2></div>
+          <div class="karte-leib">
+            <p style="font-weight:700">${e(o.haus)}</p>
+            <p style="color:var(--text-leise);font-size:13.5px">${e(o.zusatz)}, ${e(o.ort)}</p>
+            <p style="margin-top:10px;font-size:13.5px">Anrufer ist <b>${e(tel().nutzer)}</b>, ${e(tel().rolle)}.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>`;
+}
+
+function ansichtZielkunden() {
+  const o = b(), r = regeln();
+  const L = lauf();
+  const vonHand = L.auf.filter(x => x.vonHand).length;
+  const mitBeleg = L.auf.length - vonHand;
+  const geaendert = JSON.stringify(r) !== JSON.stringify(o.regeln);
+
+  const inhalt = zustand.reiterLauf === 'aufgenommen' ? `
+    <div class="tabelle-rahmen">
+      <table>
+        <thead><tr>
+          <th>Firma</th><th>Fahrzeit</th><th>Größe</th><th>Anlass und Beleg</th><th>Passung</th>
+        </tr></thead>
+        <tbody>
+          ${L.auf.map(x => x.vonHand ? `
+            <tr>
+              <td class="breit"><b>${e(x.f.firma)}</b></td>
+              <td class="zahl">${x.f.fahrzeit} Min</td>
+              <td class="zahl">${x.f.mitarbeiter}</td>
+              <td class="breit">Gegen die Regel aufgenommen, die Entscheidung des Assistenten wurde überstimmt.</td>
+              <td><span class="pille p-gold">von Hand</span></td>
+            </tr>` : `
+            <tr>
+              <td class="breit"><b>${e(x.f.firma)}</b></td>
+              <td class="zahl">${x.f.fahrzeit} Min</td>
+              <td class="zahl">${x.f.mitarbeiter}</td>
+              <td class="breit">
+                ${e(x.f.anlass)} ${guetePille(x.f.guete)}
+                <div class="beleg"><span>${e(x.f.quelle)}, abgerufen ${e(x.f.abruf)}</span></div>
+                ${x.f.zitat ? '<div class="beleg"><span class="beleg-zitat">„' + e(x.f.zitat) + '"</span></div>' : '<div class="beleg"><span>Kein Zitat, weil kein Anlass belegt ist.</span></div>'}
+                <div class="beleg"><span>${e(x.f.warum)}</span></div>
+              </td>
+              <td><span class="pille ${x.f.passung === 'stark' ? 'p-gruen' : x.f.passung === 'gut' ? 'p-gold' : 'p-grau'}">${e(x.f.passung)}</span></td>
+            </tr>`).join('')}
+          ${L.auf.length === 0 ? '<tr><td colspan="5">Keine Firma erfüllt die aktuellen Kriterien. Die Regeln stehen unter „Assistenten anlernen".</td></tr>' : ''}
+        </tbody>
+      </table>
+    </div>` : `
+    <div class="karte-leib" style="border-bottom:1px solid var(--linie)">
+      <div class="kasten gold">
+        <div class="kasten-titel">Warum diese Liste da ist</div>
+        <div class="kasten-text">
+          Ein Assistent, der nur zeigt, was er gefunden hat, ist nicht prüfbar. Hier steht jede verworfene Firma
+          mit Namen, verletztem Kriterium und Beleg. Wer anderer Meinung ist, überstimmt die Entscheidung mit einem Klick,
+          und die Firma wandert in die Liste.
+        </div>
+      </div>
+    </div>
+    <div class="tabelle-rahmen">
+      <table>
+        <thead><tr>
+          <th>Firma</th><th>Grund</th><th>Verletztes Kriterium</th><th>Beleg</th><th></th>
+        </tr></thead>
+        <tbody>
+          ${L.ver.map(v => `
+            <tr>
+              <td class="breit"><b>${e(v.f.firma)}</b></td>
+              <td class="breit">${e(v.grund)}</td>
+              <td class="breit"><span class="pille p-grau">${e(v.kriterium)}</span></td>
+              <td class="breit"><span class="beleg-zitat">${e(v.beleg)}</span></td>
+              <td class="rechts"><button class="knopf k-rand k-klein" data-ueberstimmen="${e(v.f.firma)}">Trotzdem aufnehmen</button></td>
+            </tr>`).join('')}
+          ${L.ver.length === 0 ? '<tr><td colspan="5">Keine verworfene Firma mehr offen.</td></tr>' : ''}
+        </tbody>
+      </table>
+    </div>`;
+
+  return `
+  <section class="stapel">
+    ${geaendert ? `
+    <div class="kasten gold">
+      <div class="kasten-titel">Die Regeln wurden geändert</div>
+      <div class="kasten-text">
+        Dieser Lauf rechnet mit deinen Einstellungen, nicht mit den hinterlegten.
+        Mit den ursprünglichen Regeln wären es ${standardLauf().auf.length} aufgenommen und ${standardLauf().ver.length} verworfen.
+        <button class="knopf k-rand k-klein" style="margin-top:10px" data-geh="anlernen">Zu den Einstellungen</button>
+      </div>
+    </div>` : ''}
+    <div class="gitter g4">
+      <div class="kennzahl">
+        <div class="kennzahl-label">Geprüft</div>
+        <div class="kennzahl-wert zahl">${L.geprueft}</div>
+        <div class="kennzahl-note">Lauf vom ${e(o.lauf.datum)}</div>
+      </div>
+      <div class="kennzahl">
+        <div class="kennzahl-label">Aufgenommen</div>
+        <div class="kennzahl-wert zahl">${L.auf.length}</div>
+        <div class="kennzahl-note ${vonHand ? '' : 'gut'}">${vonHand
+          ? mitBeleg + ' mit Quelle und Abrufdatum, ' + vonHand + ' von Hand'
+          : 'Mit Quelle und Abrufdatum'}</div>
+      </div>
+      <div class="kennzahl">
+        <div class="kennzahl-label">Verworfen</div>
+        <div class="kennzahl-wert zahl">${L.ver.length}</div>
+        <div class="kennzahl-note">Jede mit Begründung einsehbar</div>
+      </div>
+      <div class="kennzahl">
+        <div class="kennzahl-label">Zählprobe</div>
+        <div class="kennzahl-wert zahl">${L.auf.length} plus ${L.ver.length}</div>
+        <div class="kennzahl-note ${L.auf.length + L.ver.length === L.geprueft ? 'gut' : 'warn'}">
+          ergibt ${L.auf.length + L.ver.length}, geprüft waren ${L.geprueft}
+        </div>
+      </div>
+    </div>
+
+    <div class="karte">
+      <div class="karte-kopf">
+        <div class="reiter" role="tablist">
+          <button role="tab" aria-selected="${zustand.reiterLauf === 'aufgenommen'}" data-reiter="aufgenommen">Aufgenommen</button>
+          <button role="tab" aria-selected="${zustand.reiterLauf === 'verworfen'}" data-reiter="verworfen">Verworfen</button>
+        </div>
+        <span class="pille p-gold" style="margin-left:auto">Zielkunden-Assistent</span>
+      </div>
+      ${inhalt}
+    </div>
+  </section>`;
+}
+
+function ansichtKontakte(nurHeute) {
+  const ks = kontakte().filter(k => nurHeute ? k.heute : true);
+  const o = b();
+  return `
+  <section class="stapel">
+    ${nurHeute ? '' : `
+    <div class="karte">
+      <div class="karte-kopf"><h2 class="karte-titel">Die Farben sind die Statuslogik des Hauses</h2></div>
+      <div class="karte-leib reihe">
+        ${Object.keys(STATUS_TEXT).map(s => statusPille(s)).join('')}
+      </div>
+    </div>`}
+    <div class="karte">
+      <div class="karte-kopf">
+        <h2 class="karte-titel">${nurHeute ? 'Vom Assistenten vorgemerkt' : 'Alle Kontakte'}</h2>
+        <span class="pille p-gold" style="margin-left:auto">Termin-Assistent</span>
+      </div>
+      <div class="tabelle-rahmen">
+        <table>
+          <thead><tr>
+            <th>Person</th><th>Firma</th><th>Rolle</th><th>Wählformat</th><th>Status</th><th>Ebene</th><th>Letzte Historie</th>
+          </tr></thead>
+          <tbody>
+            ${ks.map(k => `
+              <tr class="klickbar" data-kontakt="${e(k.id)}">
+                <td class="breit">
+                  <b>${e(k.person)}</b>
+                  ${k.anredeBelegt ? '' : '<div class="beleg"><span class="pille p-rot">Anrede nicht belegt</span></div>'}
+                </td>
+                <td class="breit">${e(k.firma)}</td>
+                <td class="breit">${e(k.rolleP)}</td>
+                <td class="zahl">${e(k.telefon)}</td>
+                <td>${statusPille(k.status)}</td>
+                <td>${ebenePille(k)}</td>
+                <td class="breit">${k.historie.length ? e(k.historie[k.historie.length - 1].datum) + ', ' + e(k.historie[k.historie.length - 1].text) : 'Kein Vorgang'}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    ${nurHeute ? `
+    <div class="kasten grau">
+      <div class="kasten-titel">Warum nur diese</div>
+      <div class="kasten-text">
+        Vorgemerkt wird, wer den Status „Zuerst bearbeiten" trägt. Kontakte ohne belegten Anlass schlägt der
+        Assistent bewusst nicht vor, auch wenn Größe und Entfernung passen. Bei ${o.haus} sind das aktuell
+        ${kontakte().filter(k => !k.heute).length} Kontakte.
+      </div>
+    </div>` : ''}
+  </section>`;
+}
+
+function ansichtKontakt() {
+  const k = kontakt(zustand.kontaktId);
+  if (!k) return '<p>Kein Kontakt gewählt.</p>';
+  const o = b();
+  return `
+  <section class="stapel">
+    <div class="gitter g-haupt">
+      <div class="stapel">
+        <div class="karte">
+          <div class="karte-kopf">
+            <h2 class="karte-titel">${e(k.person)}</h2>
+            ${statusPille(k.status)} ${ebenePille(k)}
+          </div>
+          <div class="karte-leib stapel">
+            <div class="gitter g2">
+              <div><div class="feld-label">Firma</div><div>${e(k.firma)}</div></div>
+              <div><div class="feld-label">Rolle</div><div>${e(k.rolleP)}</div></div>
+              <div><div class="feld-label">Wählformat</div><div class="zahl">${e(k.telefon)}</div>
+                <div class="beleg"><span>${k.durchwahl ? 'Direkte Durchwahl, nicht die Zentrale' : 'Zentrale'}</span></div></div>
+              <div><div class="feld-label">Fundort</div><div>${e(k.fundort)}</div></div>
+            </div>
+            <div class="kasten ${k.anredeBelegt ? 'gruen' : 'rot'}">
+              <div class="kasten-titel">Anrede</div>
+              <div class="kasten-text">
+                ${k.anredeBelegt
+                  ? 'Belegt als „' + e(k.anrede) + '". Quelle, ' + e(k.anredeQuelle) + '.'
+                  : 'Nicht belegt. Der Assistent schreibt „Guten Tag," ohne Namen und rät nichts aus dem Vornamen.'}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="karte">
+          <div class="karte-kopf"><h2 class="karte-titel">Historie</h2></div>
+          <div class="karte-leib">
+            ${k.historie.length ? k.historie.map(h => `
+              <div style="padding:8px 0;border-bottom:1px solid var(--linie)">
+                <b class="zahl">${e(h.datum)}</b> ${e(h.text)}
+              </div>`).join('') : '<p style="color:var(--text-leise)">Kein Vorgang erfasst. Der Fundort steht trotzdem, damit dieselbe Suche nicht zweimal läuft.</p>'}
+          </div>
+        </div>
+      </div>
+
+      <div class="stapel">
+        <div class="karte">
+          <div class="karte-kopf"><h2 class="karte-titel">Vorgeschlagener Einstieg</h2></div>
+          <div class="karte-leib stapel">
+            ${openerBlock(k)}
+            <div class="beleg"><span>Anrufer ist ${e(tel().nutzer)}, ${e(tel().rolle)}. Der Einstieg nennt nie eine Person, die nicht selbst anruft.</span></div>
+            <button class="knopf k-gold" data-anruf="${e(k.id)}">Anruf starten</button>
+          </div>
+        </div>
+
+        <div class="karte">
+          <div class="karte-kopf"><h2 class="karte-titel">Ebene</h2></div>
+          <div class="karte-leib stapel">
+            <p style="font-size:13.5px">
+              ${k.ebene === 'Kunde'
+                ? 'Dieser Kontakt ist bereits Kunde. Er bleibt in der Liste, damit Folgegeschäft nicht verloren geht.'
+                : 'Dieser Kontakt ist Interessent. Wird er zum Kunden, genügt ein Klick, Historie und Fundort bleiben erhalten.'}
+            </p>
+            ${k.ebene === 'Interessent'
+              ? '<button class="knopf k-dunkel" data-zumkunden="' + e(k.id) + '">Zum Kunden machen</button>'
+              : '<button class="knopf k-rand" data-zuminteressent="' + e(k.id) + '">Zurück auf Interessent</button>'}
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>`;
+}
+
+function ansichtAnruf() {
+  const k = kontakt(zustand.kontaktId);
+  if (!k) return '<p>Kein Kontakt gewählt.</p>';
+  const o = b();
+  const schritte = ['Einstieg', 'Einwand', 'Ergebnis'];
+
+  let leib = '';
+  if (zustand.anrufSchritt === 0) {
+    leib = `
+      <div class="karte-leib stapel">
+        ${openerBlock(k)}
+        <div class="beleg"><span>Wählformat ${e(k.telefon)}, direkte Durchwahl. Über die Zentrale ist die Trefferquote deutlich schlechter.</span></div>
+        <div class="reihe">
+          <button class="knopf k-gold" data-schritt="1">Gesprächspartner ist dran</button>
+          <button class="knopf k-rand" data-ergebnis="nicht erreicht">Niemanden erreicht</button>
+        </div>
+      </div>`;
+  } else if (zustand.anrufSchritt === 1) {
+    /* Die Zahl wird GEZAEHLT, nie ausgeschrieben. Hier stand „die vier
+       Einwaende", und sobald einer abgeschaltet wird, waere das eine
+       Behauptung gegen den eigenen Bildschirm. */
+    const ein = aktiveEinwaende();
+    const zahlwort = ['keinen', 'einen', 'zwei', 'drei', 'vier', 'fünf', 'sechs', 'sieben', 'acht'];
+    const menge = ein.length < zahlwort.length ? zahlwort[ein.length] : String(ein.length);
+    leib = `
+      <div class="karte-leib stapel">
+        <p style="font-size:13.5px;color:var(--text-leise)">${ein.length > 0
+          ? 'Der Assistent hält ' + menge + (ein.length === 1 ? ' Einwand' : ' Einwände') + ' bereit, ausgewählt unter „Assistenten anlernen".'
+          : (tel().einwaende.length === 0
+            ? 'Für dieses Haus ist kein Einwand hinterlegt. Unter „Assistenten anlernen" lässt sich einer aufnehmen.'
+            : 'Alle ' + tel().einwaende.length + ' hinterlegten Einwände sind abgeschaltet. Unter „Assistenten anlernen" lassen sie sich wieder einschalten.')}</p>
+        ${ein.map(x => `
+          <div class="kasten gold">
+            <div class="kasten-titel">${e(x.frage)}</div>
+            <div class="kasten-text">${e(x.antwort)}</div>
+          </div>`).join('')}
+        <button class="knopf k-gold" data-schritt="2">Weiter zum Ergebnis</button>
+      </div>`;
+  } else {
+    leib = `
+      <div class="karte-leib stapel">
+        <p style="font-size:13.5px;color:var(--text-leise)">Das Ergebnis wird als Sprachnachricht eingesprochen oder getippt. Der Assistent schreibt es in Historie und Status zurück.</p>
+        <div class="feld">
+          <label class="feld-label" for="ergebnis">Was ist herausgekommen</label>
+          <textarea id="ergebnis" placeholder="Zum Beispiel, erreicht, Unterlagen erwünscht, Wiedervorlage in zwei Wochen">${e(zustand.anrufErgebnis)}</textarea>
+        </div>
+        <div class="reihe">
+          <button class="knopf k-gold" data-ergebnis="erreicht">Erreicht und notiert</button>
+          <button class="knopf k-rand" data-ergebnis="kein bedarf">Kein Bedarf</button>
+          <button class="knopf k-rand" data-ergebnis="kunde">Hat gebucht</button>
+        </div>
+        <div class="kasten grau">
+          <div class="kasten-titel">Was hier bewusst nicht passiert</div>
+          <div class="kasten-text">
+            Es ruft kein Assistent an. Ein KI-Anruf in der Kaltakquise ist ohne ausdrückliche Einwilligung nicht zulässig.
+            Der Assistent bereitet vor und schreibt nach, gesprochen wird von einem Menschen.
+          </div>
+        </div>
+      </div>`;
+  }
+
+  return `
+  <section class="stapel">
+    <div class="karte">
+      <div class="karte-kopf">
+        <h2 class="karte-titel">${e(k.person)}, ${e(k.firma)}</h2>
+        <span class="pille p-grau">${e(k.rolleP)}</span>
+        <button class="knopf k-still k-klein" style="margin-left:auto" data-kontakt="${e(k.id)}">Zurück zum Kontakt</button>
+      </div>
+      <div class="karte-leib" style="border-bottom:1px solid var(--linie)">
+        <div class="schritte">
+          ${schritte.map((s, i) => `
+            <span class="schritt ${i === zustand.anrufSchritt ? 'aktiv' : (i < zustand.anrufSchritt ? 'fertig' : '')}">${i < zustand.anrufSchritt ? '✓' : (i + 1)} ${e(s)}</span>`).join('')}
+        </div>
+      </div>
+      ${leib}
+    </div>
+  </section>`;
+}
+
+function ansichtAnlernen() {
+  const o = b(), r = regeln(), t = tel();
+  const L = lauf(), S = standardLauf();
+  /* Beide Haelften zaehlen zum Stand. Nur die Selektion zu vergleichen
+     hiesse „Standard" anzuzeigen, waehrend der Einstieg umgeschrieben
+     ist, und der Knopf zum Zuruecksetzen bliebe gesperrt. */
+  const zielGeaendert = JSON.stringify(r) !== JSON.stringify(o.regeln);
+  const telGeaendert = JSON.stringify(t) !== JSON.stringify(telefonKopie(o.schluessel));
+  /* Ein angefangener Einwand zaehlt mit. Sonst steht „Standard" ueber
+     einem Bildschirm, in dem etwas Getipptes steht, und der Knopf zum
+     Zuruecksetzen bleibt gesperrt, obwohl es etwas zurueckzusetzen gibt. */
+  const entwurf = neuEinwand();
+  const entwurfGeaendert = !!(entwurf.frage || entwurf.antwort);
+  const geaendert = zielGeaendert || telGeaendert || entwurfGeaendert;
+  const einAktiv = aktiveEinwaende().length;
+  const alleAnlaesse = [];
+  o.firmen.forEach(f => { if (f.anlassArt && alleAnlaesse.indexOf(f.anlassArt) === -1) alleAnlaesse.push(f.anlassArt); });
+  o.regeln.anlaesse.forEach(a => { if (alleAnlaesse.indexOf(a) === -1) alleAnlaesse.push(a); });
+  const offeneAnlaesse = alleAnlaesse.filter(a => r.anlaesse.indexOf(a) === -1);
+
+  return `
+  <section class="stapel">
+    <div class="karte">
+      <div class="karte-kopf">
+        <h2 class="karte-titel">Was deine Einstellungen bewirken</h2>
+        <span class="pille ${geaendert ? 'p-gold' : 'p-grau'}" style="margin-left:auto">${geaendert ? 'geändert' : 'Standard'}</span>
+      </div>
+      <div class="karte-leib stapel">
+        <div class="gitter g4">
+          <div class="kennzahl">
+            <div class="kennzahl-label">Aufgenommen</div>
+            <div class="kennzahl-wert zahl">${L.auf.length}</div>
+            <div class="kennzahl-note ${L.auf.length === S.auf.length ? '' : (L.auf.length > S.auf.length ? 'gut' : 'warn')}">
+              ${L.auf.length === S.auf.length ? 'wie im Standard' : (L.auf.length > S.auf.length ? '+' : '') + (L.auf.length - S.auf.length) + ' gegenüber dem Standard'}
+            </div>
+          </div>
+          <div class="kennzahl">
+            <div class="kennzahl-label">Verworfen</div>
+            <div class="kennzahl-wert zahl">${L.ver.length}</div>
+            <div class="kennzahl-note">von ${L.geprueft} geprüften Firmen</div>
+          </div>
+          <div class="kennzahl">
+            <div class="kennzahl-label">Zählprobe</div>
+            <div class="kennzahl-wert zahl">${L.auf.length} plus ${L.ver.length}</div>
+            <div class="kennzahl-note ${L.auf.length + L.ver.length === L.geprueft ? 'gut' : 'warn'}">ergibt ${L.auf.length + L.ver.length}</div>
+          </div>
+          <div class="kennzahl">
+            <div class="kennzahl-label">Einwände im Gespräch</div>
+            <div class="kennzahl-wert zahl">${einAktiv} von ${t.einwaende.length}</div>
+            <div class="kennzahl-note ${einAktiv === 0 ? 'warn' : ''}">${einAktiv === 0
+              ? 'Der Anruf zeigt keinen'
+              : 'stehen in Schritt zwei des Anrufs'}</div>
+          </div>
+        </div>
+        <div class="reihe">
+          <button class="knopf k-gold" data-geh="zielkunden">Ergebnis ansehen</button>
+          <button class="knopf k-rand" data-zuruecksetzen="1" ${geaendert ? '' : 'disabled'}>Auf Standard zurücksetzen</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="gitter g-haupt">
+      <div class="stapel">
+        <div class="karte">
+          <div class="karte-kopf"><h2 class="karte-titel">Kriterien des Hauses</h2>
+            <span class="pille p-gold" style="margin-left:auto">Zielkunden-Assistent</span></div>
+          <div class="karte-leib stapel">
+            <div class="gitter g2">
+              <div class="feld">
+                <label class="feld-label" for="radiusMin">Einzugsgebiet in Minuten</label>
+                <input id="radiusMin" type="number" min="5" max="360" step="5" value="${r.radiusMin}" data-regel="radiusMin">
+                <span class="beleg"><span>${o.firmen.filter(f => f.fahrzeit > r.radiusMin).length} von ${o.firmen.length} Firmen liegen darüber</span></span>
+              </div>
+              <div class="feld">
+                <label class="feld-label" for="mindestGroesse">Mindestgröße in Mitarbeitenden</label>
+                <input id="mindestGroesse" type="number" min="1" max="5000" step="1" value="${r.mindestGroesse}" data-regel="mindestGroesse">
+                <span class="beleg"><span>${o.firmen.filter(f => f.mitarbeiter < r.mindestGroesse).length} von ${o.firmen.length} Firmen liegen darunter</span></span>
+              </div>
+            </div>
+
+            <div class="schalter-zeile">
+              <button class="schalter" role="switch" aria-checked="${r.obergrenzeAn}" data-schalter="obergrenzeAn" aria-label="Obergrenze bei der Firmengröße"><span class="schalter-knopf"></span></button>
+              <div class="schalter-text">
+                <b>Obergrenze bei der Firmengröße</b>
+                <span>Standardmäßig aus. Große Häuser sind ausdrücklich erwünscht, eine Obergrenze sortiert genau die stärksten Kandidaten aus.</span>
+              </div>
+            </div>
+            ${r.obergrenzeAn ? `
+            <div class="feld" style="max-width:280px">
+              <label class="feld-label" for="obergrenze">Obergrenze in Mitarbeitenden</label>
+              <input id="obergrenze" type="number" min="10" max="10000" step="10" value="${r.obergrenze}" data-regel="obergrenze">
+              <span class="beleg"><span>${o.firmen.filter(f => f.mitarbeiter > r.obergrenze).map(f => f.firma).join(', ') || 'Aktuell fällt keine Firma heraus'}</span></span>
+            </div>` : ''}
+
+            <div class="schalter-zeile">
+              <button class="schalter" role="switch" aria-checked="${r.anlassPflicht}" data-schalter="anlassPflicht" aria-label="Ein belegter Anlass ist Pflicht"><span class="schalter-knopf"></span></button>
+              <div class="schalter-text">
+                <b>Ein belegter Anlass ist Pflicht</b>
+                <span>Ist er aus, bleiben Firmen ohne belegten Anlass in der Liste und werden als Lücke ausgewiesen, statt still zu verschwinden.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="karte">
+          <div class="karte-kopf"><h2 class="karte-titel">Passende Anlässe</h2></div>
+          <div class="karte-leib stapel">
+            <div class="reihe">
+              ${r.anlaesse.map(a => `
+                <span class="marke-pille">${e(a)}
+                  <button data-anlass-weg="${e(a)}" aria-label="${e(a)} entfernen">✕</button>
+                </span>`).join('')}
+              ${r.anlaesse.length === 0 ? '<span class="beleg"><span>Kein Anlass gesetzt, damit fällt jede Firma mit erkanntem Anlass heraus.</span></span>' : ''}
+            </div>
+            ${offeneAnlaesse.length ? `
+            <div>
+              <div class="feld-label" style="margin-bottom:6px">Wieder aufnehmen</div>
+              <div class="reihe">
+                ${offeneAnlaesse.map(a => `<button class="knopf k-rand k-klein" data-anlass-dazu="${e(a)}">${e(a)} hinzufügen</button>`).join('')}
+              </div>
+            </div>` : ''}
+            <span class="beleg"><span>Der Assistent gleicht den erkannten Anlass gegen diese Liste ab. Eine Firma ohne erkannten Anlass ist davon nicht betroffen.</span></span>
+          </div>
+        </div>
+
+        <div class="karte">
+          <div class="karte-kopf"><h2 class="karte-titel">Ausschlusskriterien</h2></div>
+          <div class="karte-leib stapel">
+            ${o.schalter.map(x => {
+              const trifft = o.firmen.filter(f => f.merkmale[x.schluessel]).length;
+              return `
+              <div class="schalter-zeile">
+                <button class="schalter" role="switch" aria-checked="${!!r.schalter[x.schluessel]}" data-schalter="s:${e(x.schluessel)}" aria-label="${e(x.grund)} ausschließen"><span class="schalter-knopf"></span></button>
+                <div class="schalter-text">
+                  <b>${e(x.grund)}</b>
+                  <span>${e(x.regel)}</span>
+                  <span class="beleg"><span>${trifft === 1 ? 'Trifft auf 1 Firma zu' : 'Trifft auf ' + trifft + ' Firmen zu'}</span></span>
+                </div>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>
+      </div>
+
+      <div class="stapel">
+        <div class="karte">
+          <div class="karte-kopf"><h2 class="karte-titel">Kriterien für das Telefonat</h2>
+            <span class="pille p-lila" style="margin-left:auto">Termin-Assistent</span></div>
+          <div class="karte-leib stapel">
+            <div class="stapel">
+              <div class="feld">
+                <label class="feld-label" for="anruferName">Wer anruft</label>
+                <input id="anruferName" type="text" maxlength="60" value="${e(t.nutzer)}" data-telefon="nutzer">
+                <span class="beleg"><span>Steht im Einstieg, im Seitenkopf und auf der Übersicht</span></span>
+              </div>
+              <div class="feld">
+                <label class="feld-label" for="anruferRolle">Seine Rolle im Haus</label>
+                <input id="anruferRolle" type="text" maxlength="60" value="${e(t.rolle)}" data-telefon="rolle">
+                <span class="beleg"><span>Der Einstieg nennt nie eine Person, die nicht selbst anruft</span></span>
+              </div>
+            </div>
+
+            <div class="feld">
+              <label class="feld-label" for="schlusssatz">Schlusssatz des Einstiegs</label>
+              <textarea id="schlusssatz" maxlength="400" data-telefon="schluss">${e(t.schluss)}</textarea>
+              <span class="beleg"><span>Steht in jedem vorgeschlagenen Einstieg, direkt vor der Frage nach dem Zeitpunkt</span></span>
+            </div>
+
+            <div>
+              <div class="feld-label" style="margin-bottom:8px">Vorbereitete Einwände</div>
+              ${t.einwaende.map((x, i) => `
+                <div class="schalter-zeile">
+                  <button class="schalter" role="switch" aria-checked="${!!x.aktiv}" data-einwand="${i}" aria-label="Einwand ${e(x.frage)}"><span class="schalter-knopf"></span></button>
+                  <div class="schalter-text">
+                    <b>${e(x.frage)}</b>
+                    <span>${e(x.antwort)}</span>
+                    ${x.eigen ? '<span class="beleg"><span>selbst aufgenommen</span></span>' : ''}
+                  </div>
+                </div>`).join('')}
+              ${t.einwaende.length === 0 ? '<span class="beleg"><span>Kein Einwand hinterlegt.</span></span>' : ''}
+            </div>
+
+            <div class="stapel">
+              <div class="feld">
+                <label class="feld-label" for="neuFrage">Einwand aufnehmen, was der Angerufene sagt</label>
+                <input id="neuFrage" type="text" maxlength="120" value="${e(neuEinwand().frage)}" data-neu="frage" placeholder="Zum Beispiel, wir haben dieses Jahr kein Budget.">
+              </div>
+              <div class="feld">
+                <label class="feld-label" for="neuAntwort">Was der Anrufer darauf antwortet</label>
+                <input id="neuAntwort" type="text" maxlength="300" value="${e(neuEinwand().antwort)}" data-neu="antwort" placeholder="Die Antwort, die im Haus wirklich funktioniert.">
+              </div>
+            </div>
+            <div class="reihe">
+              <button class="knopf k-rand k-klein" data-einwand-neu="1">Einwand aufnehmen</button>
+            </div>
+            <span class="beleg"><span>Aufgenommene Einwände stehen sofort in Schritt zwei des Anrufs, in der Reihenfolge dieser Liste.</span></span>
+          </div>
+        </div>
+
+        <div class="karte">
+          <div class="karte-kopf"><h2 class="karte-titel">Was die Assistenten gelernt haben</h2></div>
+          <div class="karte-leib stapel">
+            ${o.nuggets.map((n, i) => zustand.verworfeneNuggets[zustand.betrieb].indexOf(i) >= 0 ? `
+              <div class="kasten grau">
+                <div class="kasten-titel">${e(n.art)}, verworfen</div>
+                <div class="kasten-text">Der Assistent nutzt diesen Punkt nicht mehr.
+                  <button class="knopf k-still k-klein" data-nugget-zurueck="${i}">Rückgängig</button>
+                </div>
+              </div>` : `
+              <div class="kasten gruen">
+                <div class="kasten-titel">${e(n.art)}
+                  <span class="pille ${n.assistent === 'termin' ? 'p-lila' : 'p-gold'}" style="margin-left:8px">${n.assistent === 'termin' ? 'Termin-Assistent' : 'Zielkunden-Assistent'}</span>
+                </div>
+                <div class="kasten-text">${e(n.text)}
+                  <div class="beleg" style="margin-top:6px">
+                    <span>${e(n.herkunft)}</span>
+                    <button class="knopf k-still k-klein" data-nugget-weg="${i}">Stimmt nicht</button>
+                  </div>
+                </div>
+              </div>`).join('')}
+          </div>
+        </div>
+        <div class="kasten gold">
+          <div class="kasten-titel">Warum das hier steht</div>
+          <div class="kasten-text">
+            Gelerntes ist nur dann etwas wert, wenn es aus Gesprächen stammt und nicht aus der eigenen Eingabe.
+            Deshalb trägt jeder Eintrag, woher er kommt, mit der Zahl der Fälle oder dem Zeitraum. Was nicht stimmt, wird verworfen.
+          </div>
+        </div>
+        <div class="kasten grau">
+          <div class="kasten-titel">Was hier nicht passiert</div>
+          <div class="kasten-text">
+            Der Prototyp speichert nichts. Beim Neuladen der Seite stehen wieder die hinterlegten Regeln.
+            Im Betrieb liegen sie beim Kunden, nicht im Browser.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>`;
+}
+
+const ANSICHTEN = {
+  uebersicht: { titel: 'Übersicht', kicker: 'Akquise', icon: '◱', bau: ansichtUebersicht },
+  zielkunden: { titel: 'Zielkunden finden', kicker: 'Zielkunden-Assistent', icon: '⌖', bau: ansichtZielkunden },
+  heute:      { titel: 'Heute anrufen', kicker: 'Termin-Assistent', icon: '☎', bau: () => ansichtKontakte(true) },
+  kontakte:   { titel: 'Alle Kontakte', kicker: 'Termin-Assistent', icon: '☰', bau: () => ansichtKontakte(false) },
+  kontakt:    { titel: 'Kontakt', kicker: 'Termin-Assistent', icon: '☰', bau: ansichtKontakt, versteckt: true },
+  anruf:      { titel: 'Anruf', kicker: 'Termin-Assistent', icon: '☎', bau: ansichtAnruf, versteckt: true },
+  anlernen:   { titel: 'Assistenten anlernen', kicker: 'Beide Assistenten', icon: '✎', bau: ansichtAnlernen }
+};
+
+function zeichne() {
+  const o = b();
+  const ks = kontakte();
+  const a = ANSICHTEN[zustand.ansicht];
+  const heuteOffen = ks.filter(k => k.heute && !k.erledigt).length;
+
+  const punkt = (id, zahl) => {
+    const x = ANSICHTEN[id];
+    return `<button class="nav-punkt" data-geh="${id}" ${zustand.ansicht === id ? 'aria-current="page"' : ''}>
+      <span class="nav-icon" aria-hidden="true">${x.icon}</span>${e(x.titel)}
+      ${zahl ? '<span class="nav-zahl">' + zahl + '</span>' : ''}</button>`;
+  };
+
+  document.getElementById('wurzel').innerHTML = `
+  <div class="app">
+    <nav class="nav" aria-label="Hauptnavigation">
+      <div class="marke">
+        <span class="monogramm" aria-hidden="true">H</span>
+        <span class="marke-text">
+          <span class="marke-name">HospitalityOS</span>
+          <span class="marke-sub">Akquise</span>
+        </span>
+      </div>
+      <div class="nav-gruppe">
+        <div class="nav-titel">Überblick</div>
+        ${punkt('uebersicht')}
+      </div>
+      <div class="nav-gruppe">
+        <div class="nav-titel">Zielkunden-Assistent</div>
+        ${punkt('zielkunden', lauf().auf.length)}
+      </div>
+      <div class="nav-gruppe">
+        <div class="nav-titel">Termin-Assistent</div>
+        ${punkt('heute', heuteOffen)}
+        ${punkt('kontakte', ks.length)}
+      </div>
+      <div class="nav-gruppe">
+        <div class="nav-titel">Einrichtung</div>
+        ${punkt('anlernen')}
+      </div>
+      <div class="nav-fuss">
+        <div class="nav-hinweis">
+          <b>Prototyp.</b> Alle Häuser, Firmen und Personen sind erfunden. Es geht um den Ablauf, nicht um Daten.
+        </div>
+        <div class="nutzer">
+          <span class="nutzer-kreis" aria-hidden="true">${e(kuerzel(tel().nutzer))}</span>
+          <span>
+            <span class="nutzer-name">${e(tel().nutzer)}</span><br>
+            <span class="nutzer-rolle">${e(tel().rolle)}</span>
+          </span>
+        </div>
+      </div>
+    </nav>
+
+    <main class="inhalt">
+      <header class="kopf">
+        <div class="kopf-text">
+          <div class="kopf-kicker">${e(a.kicker)}</div>
+          <h1 class="kopf-titel">${e(a.titel)}</h1>
+        </div>
+        <div class="umschalter" role="group" aria-label="Betrieb wählen">
+          ${Object.keys(BETRIEBE).map(s => `
+            <button data-betrieb="${s}" aria-pressed="${zustand.betrieb === s}">${e(BETRIEBE[s].reiter)}</button>`).join('')}
+        </div>
+      </header>
+      ${zustand.meldung ? '<div style="padding:12px 26px 0"><div class="kasten ' + (zustand.meldungArt === 'stop' ? 'rot' : 'gruen') + '"><div class="kasten-titel">' + (zustand.meldungArt === 'stop' ? 'Nicht übernommen' : 'Erledigt') + '</div><div class="kasten-text">' + e(zustand.meldung) + '</div></div></div>' : ''}
+      <div class="bahn">${a.bau()}</div>
+      <footer class="fuss">
+        HospitalityOS, Zielkunden-Assistent und Termin-Assistent. Klickbarer Prototyp der DMT Group.
+        Alle Häuser, Firmen, Personen und Zahlen sind erfunden.
+      </footer>
+    </main>
+  </div>`;
+}
+
+/* ------------------------------------------------------------------
+   Bedienung
+   ------------------------------------------------------------------ */
+document.addEventListener('click', (ev) => {
+  const ziel = ev.target.closest('[data-geh],[data-betrieb],[data-kontakt],[data-anruf],[data-reiter],[data-ueberstimmen],[data-zumkunden],[data-zuminteressent],[data-schritt],[data-ergebnis],[data-schalter],[data-anlass-weg],[data-anlass-dazu],[data-zuruecksetzen],[data-nugget-weg],[data-nugget-zurueck],[data-einwand],[data-einwand-neu]');
+  if (!ziel) return;
+  const d = ziel.dataset;
+  zustand.meldung = null;
+  zustand.meldungArt = 'gut';
+
+  if (d.geh) { zustand.ansicht = d.geh; }
+  else if (d.betrieb) { zustand.betrieb = d.betrieb; zustand.ansicht = 'uebersicht'; }
+  else if (d.reiter) { zustand.reiterLauf = d.reiter; }
+  else if (d.kontakt) { zustand.kontaktId = d.kontakt; zustand.ansicht = 'kontakt'; }
+  else if (d.anruf) { zustand.kontaktId = d.anruf; zustand.ansicht = 'anruf'; zustand.anrufSchritt = 0; zustand.anrufErgebnis = ''; }
+  else if (d.schritt) {
+    const feld = document.getElementById('ergebnis');
+    if (feld) zustand.anrufErgebnis = feld.value;
+    zustand.anrufSchritt = Number(d.schritt);
+  }
+  else if (d.schalter) {
+    const r = regeln();
+    if (d.schalter.indexOf('s:') === 0) {
+      const k = d.schalter.slice(2);
+      r.schalter[k] = !r.schalter[k];
+    } else {
+      r[d.schalter] = !r[d.schalter];
+    }
+  }
+  else if (d.anlassWeg) {
+    const r = regeln();
+    r.anlaesse = r.anlaesse.filter(a => a !== d.anlassWeg);
+  }
+  else if (d.anlassDazu) {
+    regeln().anlaesse.push(d.anlassDazu);
+  }
+  else if (d.einwand) {
+    const x = tel().einwaende[Number(d.einwand)];
+    if (x) x.aktiv = !x.aktiv;
+  }
+  else if (d.einwandNeu) {
+    /* Die Felder werden VOR dem Neuzeichnen gelesen, sonst ist die
+       Eingabe weg, bevor sie im Zustand ankommt. Dieselbe Reihenfolge
+       wie beim Ergebnisfeld im Anruf. */
+    const ff = document.getElementById('neuFrage');
+    const fa = document.getElementById('neuAntwort');
+    const frage = ff ? ff.value.trim() : '';
+    const antwort = fa ? fa.value.trim() : '';
+    if (!frage || !antwort) {
+      zustand.neuEinwand[zustand.betrieb] = { frage: frage, antwort: antwort };
+      zustand.meldungArt = 'stop';
+      zustand.meldung = 'Ein Einwand braucht beides, den Satz des Angerufenen und die Antwort darauf. '
+        + 'Ohne Antwort stünde im Anruf eine Frage ohne Erwiderung.';
+    } else {
+      tel().einwaende.push({ frage: frage, antwort: antwort, aktiv: true, eigen: true });
+      zustand.neuEinwand[zustand.betrieb] = { frage: '', antwort: '' };
+      zustand.meldung = 'Der Einwand steht jetzt in Schritt zwei des Anrufs, an letzter Stelle.';
+    }
+  }
+  else if (d.zuruecksetzen) {
+    zustand.regeln[zustand.betrieb] = JSON.parse(JSON.stringify(b().regeln));
+    zustand.telefon[zustand.betrieb] = telefonKopie(zustand.betrieb);
+    const hatteEntwurf = !!(neuEinwand().frage || neuEinwand().antwort);
+    zustand.neuEinwand[zustand.betrieb] = { frage: '', antwort: '' };
+    zustand.meldung = 'Selektion und Telefonat stehen wieder auf dem hinterlegten Stand. Überstimmte Firmen bleiben davon unberührt.'
+      + (hatteEntwurf ? ' Der angefangene Einwand wurde dabei verworfen.' : '');
+  }
+  else if (d.nuggetWeg) {
+    zustand.verworfeneNuggets[zustand.betrieb].push(Number(d.nuggetWeg));
+  }
+  else if (d.nuggetZurueck) {
+    const v = zustand.verworfeneNuggets[zustand.betrieb];
+    v.splice(v.indexOf(Number(d.nuggetZurueck)), 1);
+  }
+  else if (d.ueberstimmen) {
+    zustand.ueberstimmt[zustand.betrieb].push(d.ueberstimmen);
+    zustand.meldung = d.ueberstimmen + ' ist jetzt in der Liste. Die Entscheidung des Assistenten wurde überstimmt und der Grund bleibt nachlesbar.';
+  }
+  else if (d.zumkunden) {
+    aendere(d.zumkunden, 'ebene', 'Kunde');
+    aendere(d.zumkunden, 'status', 'lila');
+    zustand.meldung = 'Aus dem Interessenten ist ein Kunde geworden. Historie und Fundort sind unverändert erhalten.';
+  }
+  else if (d.zuminteressent) {
+    aendere(d.zuminteressent, 'ebene', 'Interessent');
+    aendere(d.zuminteressent, 'status', 'hellgruen');
+    zustand.meldung = 'Der Kontakt steht wieder auf Interessent.';
+  }
+  else if (d.ergebnis) {
+    const k = kontakt(zustand.kontaktId);
+    const feld = document.getElementById('ergebnis');
+    const notiz = feld && feld.value.trim() ? feld.value.trim() : null;
+    const heute = '18.08.2026';
+    let text, status = 'hellgruen';
+
+    if (d.ergebnis === 'nicht erreicht') { text = notiz || 'Niemanden erreicht'; status = 'hellgruen'; }
+    else if (d.ergebnis === 'kein bedarf') { text = notiz || 'Erreicht, aktuell kein Bedarf'; status = 'grau'; }
+    else if (d.ergebnis === 'kunde') { text = notiz || 'Erreicht, Veranstaltung gebucht'; status = 'lila'; }
+    else { text = notiz || 'Erreicht, Unterlagen erwünscht'; status = 'hellgruen'; }
+
+    const neueHistorie = k.historie.concat([{ datum: heute, text: text }]);
+    aendere(k.id, 'historie', neueHistorie);
+    aendere(k.id, 'status', status);
+    aendere(k.id, 'erledigt', true);
+    if (d.ergebnis === 'kunde') aendere(k.id, 'ebene', 'Kunde');
+
+    zustand.ansicht = 'heute';
+    zustand.meldung = 'Ergebnis in Historie und Status zurückgeschrieben, ' + text + '.';
+  }
+
+  merkeAdresse();
+  zeichne();
+  window.scrollTo(0, 0);
+});
+
+/* Zahlenfelder lösen bei `change` aus, nicht bei `input`. Bei jedem
+   Tastendruck neu zu zeichnen wuerde den Schreibfokus zerstoeren,
+   sobald die erste Ziffer getippt ist. */
+/* Die beiden Felder fuer einen neuen Einwand wandern bei jedem
+   Tastendruck in den Zustand, ohne neu zu zeichnen. Sonst waere die
+   Eingabe weg, sobald daneben etwas anderes ein Neuzeichnen ausloest. */
+document.addEventListener('input', (ev) => {
+  const el = ev.target.closest('[data-neu]');
+  if (!el) return;
+  neuEinwand()[el.dataset.neu] = el.value;
+});
+
+/* Anrufer, Rolle und Schlusssatz. Sie wirken sofort im Einstieg, deshalb
+   wird neu gezeichnet, und der Schreibfokus kehrt danach in dasselbe
+   Feld zurueck. */
+document.addEventListener('change', (ev) => {
+  const t = ev.target.closest('[data-telefon]');
+  if (t) {
+    const wert = t.value.trim();
+    if (!wert) { zeichne(); return; }
+    tel()[t.dataset.telefon] = wert;
+    zustand.meldung = null;
+    merkeAdresse();
+    zeichne();
+    const wieder = document.querySelector('[data-telefon="' + t.dataset.telefon + '"]');
+    if (wieder) { wieder.focus(); wieder.setSelectionRange(wieder.value.length, wieder.value.length); }
+    return;
+  }
+  const el = ev.target.closest('[data-regel]');
+  if (!el) return;
+  const r = regeln();
+  const wert = Number(el.value);
+  if (!isFinite(wert) || wert <= 0) { zeichne(); return; }
+  r[el.dataset.regel] = wert;
+  zustand.meldung = null;
+  merkeAdresse();
+  zeichne();
+});
+
+/* ------------------------------------------------------------------
+   Adresse je Ansicht.
+   Jede Ansicht ist direkt aufrufbar, `#tagung/kontakte` oder
+   `#gruppe/zielkunden`. Zwei Gruende. Der Empfaenger kann eine
+   bestimmte Ansicht weiterschicken, und jede Ansicht laesst sich
+   einzeln pruefen, ohne sich durch Klicks zu hangeln.
+   ------------------------------------------------------------------ */
+function merkeAdresse() {
+  const teile = [zustand.betrieb, zustand.ansicht];
+  if (zustand.ansicht === 'zielkunden' && zustand.reiterLauf === 'verworfen') teile.push('verworfen');
+  if ((zustand.ansicht === 'kontakt' || zustand.ansicht === 'anruf') && zustand.kontaktId) teile.push(zustand.kontaktId);
+  history.replaceState(null, '', '#' + teile.join('/'));
+}
+
+function leseAdresse() {
+  const roh = (location.hash || '').replace(/^#/, '');
+  if (!roh) return;
+  const teile = roh.split('/').filter(Boolean);
+  if (teile.length && BETRIEBE[teile[0]]) { zustand.betrieb = teile.shift(); }
+  if (teile.length && ANSICHTEN[teile[0]]) { zustand.ansicht = teile.shift(); }
+  if (zustand.ansicht === 'zielkunden') {
+    zustand.reiterLauf = teile[0] === 'verworfen' ? 'verworfen' : 'aufgenommen';
+  }
+  if (zustand.ansicht === 'kontakt' || zustand.ansicht === 'anruf') {
+    const ks = kontakte();
+    const treffer = ks.find(k => k.id === teile[0]);
+    zustand.kontaktId = treffer ? treffer.id : ks[0].id;
+  }
+}
+
+leseAdresse();
+merkeAdresse();
+zeichne();
+</script>
+</body>
+</html>
